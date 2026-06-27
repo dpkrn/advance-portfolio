@@ -24,7 +24,7 @@ function TimelineCard({ milestone, index }) {
       className={`relative flex items-start md:gap-0 gap-6 ${isLeft ? 'md:flex-row' : 'md:flex-row-reverse'}`}
     >
       {/* Timeline dot */}
-      <div className="absolute left-4 md:left-1/2 w-3 h-3 rounded-full bg-accent-light border-[3px] border-surface -translate-x-1/2 mt-6 z-10 ring-4 ring-accent-bg" />
+      <div className="absolute left-4 md:left-1/2 w-3 h-3 rounded-full bg-accent border-[3px] border-surface -translate-x-1/2 mt-6 z-10 ring-4 ring-accent/20" />
 
       {/* Card */}
       <div className={`ml-12 md:ml-0 md:w-[46%] ${isLeft ? 'md:mr-auto md:pr-8' : 'md:ml-auto md:pl-8'}`}>
@@ -108,7 +108,7 @@ export default function TimelineSection({ section, id }) {
 
       <div className="relative">
         {/* Center line */}
-        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-accent-light/40 via-surface-border to-transparent -translate-x-px" />
+        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-accent/50 via-surface-border to-transparent -translate-x-px" />
 
         <div className="space-y-6">
           {milestones.map((milestone, index) => (
