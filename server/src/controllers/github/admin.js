@@ -1,5 +1,6 @@
 import GithubData from '../../models/GithubData.js';
-import { syncFromGithub } from '../../services/githubSync.js';
+import { syncFromGithub } from '../../external-services/github/index.js';
+import { getGithubToken } from '../../config/github.js';
 
 export async function adminGetGithubData(_req, res, next) {
   try {
@@ -42,7 +43,7 @@ export async function adminUpdateGithubConfig(req, res, next) {
 
 export async function adminSyncGithubData(_req, res, next) {
   try {
-    const token = process.env.GITHUB_TOKEN;
+    const token = getGithubToken();
     if (!token) return res.status(500).json({ message: 'GITHUB_TOKEN not set in environment' });
 
     const existing = await GithubData.findOne().lean();
