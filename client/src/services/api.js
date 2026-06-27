@@ -1,40 +1,79 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import axios from 'axios';
 
-async function request(endpoint, options = {}) {
-  const { headers: customHeaders, ...fetchOptions } = options;
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    cache: 'no-store',
-    ...fetchOptions,
-    headers: {
-      'Content-Type': 'application/json',
-      ...customHeaders,
-    },
-  });
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
+const client = axios.create({
+  baseURL: BASE,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-  return response.json();
-}
+client.interceptors.response.use(
+  (res) => res.data,
+  (err) => Promise.reject(new Error(err.response?.data?.message || err.message || 'Request failed')),
+);
 
 export const api = {
-  getProfile: () => request('/profile'),
-  getSections: () => request('/sections'),
-  getSection: (slug) => request(`/sections/${slug}`),
-  getProjects: () => request('/projects'),
-  getProject: (slug) => request(`/projects/${slug}`),
-  submitContact: (data) =>
-    request('/contact', {
+  getProfile: () => client.get('/profile'),
+  getSections: () => client.get('/sections'),
+  getSection: (slug) => client.get(`/sections/${slug}`),
+  getProjects: () => client.get('/projects'),
+  getProject: (slug) => client.get(`/projects/${slug}`),
+  submitContact: (data) => client.post('/contact', data),
+  askQuestion: (message, sessionId) => client.post('/ask', { message, sessionId }),
+
+  // Streaming variant — reads SSE, calls onChunk per token, onDone when complete
+  askQuestionStream: async (message, sessionId, { onChunk, onDone, onError } = {}) => {
+    const response = await fetch(`${BASE}/ask/stream`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  askQuestion: (message, history = []) =>
-    request('/ask', {
-      method: 'POST',
-      body: JSON.stringify({ message, history }),
-    }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, sessionId }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const error = new Error(err.message || `Request failed (${response.status})`);
+      onError?.(error);
+      return;
+    }
+
+    const reader  = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer    = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data: ')) continue;
+
+          const payload = trimmed.slice(6);
+          if (payload === '[DONE]') { onDone?.(); return; }
+
+          try {
+            const parsed = JSON.parse(payload);
+            if (parsed.error) { onError?.(new Error(parsed.error)); return; }
+            if (parsed.chunk) onChunk?.(parsed.chunk);
+          } catch {
+            // ignore malformed SSE lines
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    onDone?.();
+  },
+
+  getApprovedReviews: () => client.get('/reviews'),
+  submitReview: (data) => client.post('/reviews', data),
 };
 
 export default api;

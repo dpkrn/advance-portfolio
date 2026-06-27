@@ -12,6 +12,13 @@ import {
   adminMoveSection,
   adminToggleSectionVisibility,
 } from '../controllers/adminSection.controller.js';
+import {
+  adminGetReviews,
+  adminUpdateReviewStatus,
+  adminToggleReviewShown,
+  adminDeleteReview,
+} from '../controllers/review.controller.js';
+import { listSessions } from '../controllers/ask.controller.js';
 
 const router = Router();
 
@@ -32,5 +39,12 @@ router.get('/sections/:slug', adminGetSection);
 router.put('/sections/:slug', adminUpdateSection);
 router.delete('/sections/:slug', adminDeleteSection);
 router.patch('/sections/:slug/visibility', adminToggleSectionVisibility);
+
+router.get('/ask/sessions', listSessions);
+
+router.get('/reviews', adminGetReviews);
+router.patch('/reviews/:id/status', adminUpdateReviewStatus);
+router.patch('/reviews/:id/shown', adminToggleReviewShown);
+router.delete('/reviews/:id', adminDeleteReview);
 
 export default router;

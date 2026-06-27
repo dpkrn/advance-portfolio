@@ -1,94 +1,44 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+import axios from 'axios';
 
-async function request(endpoint, options = {}) {
-  const { headers: customHeaders, ...fetchOptions } = options;
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    cache: 'no-store',
-    ...fetchOptions,
-    headers: {
-      'Content-Type': 'application/json',
-      ...customHeaders,
-    },
-  });
+const adminClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  headers: { 'Content-Type': 'application/json' },
+});
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
-  }
-
-  return response.json();
-}
-
-function authHeaders() {
+adminClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('adminToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+adminClient.interceptors.response.use(
+  (res) => res.data,
+  (err) => Promise.reject(new Error(err.response?.data?.message || err.message || 'Request failed')),
+);
 
 export const adminApi = {
-  login: (password) =>
-    request('/admin/login', {
-      method: 'POST',
-      body: JSON.stringify({ password }),
-    }),
+  login: (password) => adminClient.post('/admin/login', { password }),
+  me: () => adminClient.get('/admin/me'),
 
-  me: () =>
-    request('/admin/me', { headers: authHeaders() }),
+  getProfile: () => adminClient.get('/admin/profile'),
+  updateProfile: (data) => adminClient.put('/admin/profile', data),
 
-  getProfile: () =>
-    request('/admin/profile', { headers: authHeaders() }),
+  getSections: () => adminClient.get('/admin/sections'),
+  getSection: (slug) => adminClient.get(`/admin/sections/${slug}`),
+  createSection: (data) => adminClient.post('/admin/sections', data),
+  updateSection: (slug, data) => adminClient.put(`/admin/sections/${slug}`, data),
+  deleteSection: (slug) => adminClient.delete(`/admin/sections/${slug}`),
+  reorderSections: (order) => adminClient.put('/admin/sections/reorder', { order }),
+  moveSection: (slug, direction) => adminClient.post('/admin/sections/move', { slug, direction }),
+  toggleVisibility: (slug) => adminClient.patch(`/admin/sections/${slug}/visibility`),
 
-  updateProfile: (data) =>
-    request('/admin/profile', {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    }),
+  getAskSessions: (page = 1, limit = 20) =>
+    adminClient.get(`/admin/ask/sessions?page=${page}&limit=${limit}`),
 
-  getSections: () =>
-    request('/admin/sections', { headers: authHeaders() }),
-
-  getSection: (slug) =>
-    request(`/admin/sections/${slug}`, { headers: authHeaders() }),
-
-  createSection: (data) =>
-    request('/admin/sections', {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    }),
-
-  updateSection: (slug, data) =>
-    request(`/admin/sections/${slug}`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify(data),
-    }),
-
-  deleteSection: (slug) =>
-    request(`/admin/sections/${slug}`, {
-      method: 'DELETE',
-      headers: authHeaders(),
-    }),
-
-  reorderSections: (order) =>
-    request('/admin/sections/reorder', {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({ order }),
-    }),
-
-  moveSection: (slug, direction) =>
-    request('/admin/sections/move', {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ slug, direction }),
-    }),
-
-  toggleVisibility: (slug) =>
-    request(`/admin/sections/${slug}/visibility`, {
-      method: 'PATCH',
-      headers: authHeaders(),
-    }),
+  getReviews: (status = 'all') => adminClient.get(`/admin/reviews?status=${status}`),
+  updateReviewStatus: (id, status) => adminClient.patch(`/admin/reviews/${id}/status`, { status }),
+  toggleReviewShown: (id) => adminClient.patch(`/admin/reviews/${id}/shown`),
+  deleteReview: (id) => adminClient.delete(`/admin/reviews/${id}`),
 };
 
 export default adminApi;

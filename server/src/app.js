@@ -12,6 +12,7 @@ import contactRoutes from './routes/contact.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import askRoutes from './routes/ask.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import reviewRoutes from './routes/review.routes.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use('/api/sections', sectionRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/ask', askRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 
 if (isProduction) {

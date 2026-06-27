@@ -7,6 +7,8 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminSectionPage from './pages/admin/AdminSectionPage';
 import AdminProfilePage from './pages/admin/AdminProfilePage';
+import AdminReviewsPage from './pages/admin/AdminReviewsPage';
+import AdminAskSessionsPage from './pages/admin/AdminAskSessionsPage';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 function AppShell() {
@@ -29,6 +31,8 @@ function AppShell() {
         <Route path="profile" element={<AdminProfilePage />} />
         <Route path="sections/new" element={<AdminSectionPage />} />
         <Route path="sections/:slug" element={<AdminSectionPage />} />
+        <Route path="reviews" element={<AdminReviewsPage />} />
+        <Route path="ask-sessions" element={<AdminAskSessionsPage />} />
       </Route>
 
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />

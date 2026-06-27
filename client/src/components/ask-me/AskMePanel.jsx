@@ -5,35 +5,61 @@ import { useAskMe } from '../../hooks/useAskMe';
 import { SUGGESTED_QUESTIONS, WELCOME_MESSAGE } from './constants';
 import AskMessageContent from './AskMessageContent';
 
-export default function AskMePanel({ open, onClose, profileName = 'me' }) {
-  const { messages, loading, error, sendMessage, clearChat } = useAskMe();
-  const [input, setInput] = useState('');
-  const inputRef = useRef(null);
-  const scrollRef = useRef(null);
+// Blinking caret shown at the end of a streaming response
+function StreamingCursor() {
+  return (
+    <span
+      className="inline-block w-[2px] h-[0.9em] bg-current align-middle ml-0.5 animate-[blink_1s_step-end_infinite]"
+      aria-hidden="true"
+    />
+  );
+}
 
+// While streaming, render raw pre-wrap text to avoid broken partial-markdown.
+// Once done, switch to the full markdown renderer.
+function AssistantContent({ content, streaming }) {
+  if (streaming) {
+    return (
+      <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+        {content}
+        <StreamingCursor />
+      </p>
+    );
+  }
+  return <AskMessageContent content={content} />;
+}
+
+export default function AskMePanel({ open, onClose, profileName = 'me' }) {
+  const { messages, loading, isBusy, error, sendMessage, clearChat } = useAskMe();
+  const [input, setInput] = useState('');
+  const inputRef  = useRef(null);
+  const scrollRef = useRef(null);
+  const bottomRef = useRef(null);
+
+  // Focus input when panel opens
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
+  // Scroll to bottom on every new message and on every streaming chunk
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, loading]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    sendMessage(input);
+    if (!input.trim() || isBusy) return;
+    sendMessage(input.trim());
     setInput('');
   };
 
-  const showSuggestions = messages.length === 0;
+  const showSuggestions = messages.length === 0 && !loading;
 
   return (
     <AnimatePresence>
       {open && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -43,6 +69,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
             onClick={onClose}
           />
 
+          {/* Drawer */}
           <motion.aside
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -64,7 +91,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {messages.length > 0 && (
+                {messages.length > 0 && !isBusy && (
                   <button
                     type="button"
                     onClick={clearChat}
@@ -88,7 +115,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-              {/* Welcome message */}
+              {/* Welcome */}
               <div className="flex gap-3">
                 <div className="w-7 h-7 rounded-lg icon-box flex items-center justify-center shrink-0 mt-0.5">
                   <Bot className="w-3.5 h-3.5 text-accent-light" />
@@ -100,6 +127,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </div>
               </div>
 
+              {/* Chat messages */}
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -110,11 +138,9 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                       msg.role === 'user' ? 'bg-accent' : 'icon-box'
                     }`}
                   >
-                    {msg.role === 'user' ? (
-                      <User className="w-3.5 h-3.5 text-white" />
-                    ) : (
-                      <Bot className="w-3.5 h-3.5 text-accent-light" />
-                    )}
+                    {msg.role === 'user'
+                      ? <User className="w-3.5 h-3.5 text-white" />
+                      : <Bot  className="w-3.5 h-3.5 text-accent-light" />}
                   </div>
                   <div
                     className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
@@ -123,25 +149,24 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                         : 'glass-panel rounded-tl-md'
                     }`}
                   >
-                    {msg.role === 'user' ? (
-                      <p>{msg.content}</p>
-                    ) : (
-                      <AskMessageContent content={msg.content} />
-                    )}
+                    {msg.role === 'user'
+                      ? <p>{msg.content}</p>
+                      : <AssistantContent content={msg.content} streaming={msg.streaming} />}
                   </div>
                 </div>
               ))}
 
+              {/* Waiting dots — only shown before first token arrives */}
               {loading && (
                 <div className="flex gap-3">
                   <div className="w-7 h-7 rounded-lg icon-box flex items-center justify-center shrink-0">
                     <Bot className="w-3.5 h-3.5 text-accent-light" />
                   </div>
-                  <div className="glass-panel px-4 py-3 flex items-center gap-1">
-                    {[0, 150, 300].map((delay) => (
+                  <div className="glass-panel px-4 py-3 flex items-center gap-1.5">
+                    {[0, 160, 320].map((delay) => (
                       <span
                         key={delay}
-                        className="w-2 h-2 rounded-full bg-accent-light/60 animate-bounce"
+                        className="w-1.5 h-1.5 rounded-full bg-accent-light/60 animate-bounce"
                         style={{ animationDelay: `${delay}ms` }}
                       />
                     ))}
@@ -150,8 +175,13 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
               )}
 
               {error && (
-                <p className="text-sm text-danger-fg text-center px-4">{error}</p>
+                <p className="text-sm text-danger-fg bg-danger-bg border border-danger-border rounded-xl px-4 py-3">
+                  {error}
+                </p>
               )}
+
+              {/* Invisible anchor to scroll to */}
+              <div ref={bottomRef} />
             </div>
 
             {/* Suggestions */}
@@ -161,8 +191,8 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                   <button
                     key={q}
                     type="button"
-                    onClick={() => sendMessage(q)}
-                    disabled={loading}
+                    onClick={() => { sendMessage(q); }}
+                    disabled={isBusy}
                     className="px-3 py-1.5 rounded-full text-xs font-medium border border-surface-border bg-surface-overlay text-muted-foreground hover:text-foreground hover:border-accent-border transition-colors disabled:opacity-50"
                   >
                     {q}
@@ -184,14 +214,14 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                       handleSubmit(e);
                     }
                   }}
-                  placeholder="Ask about projects, skills, experience…"
+                  placeholder={isBusy ? 'Waiting for response…' : 'Ask about projects, skills, experience…'}
                   rows={1}
-                  disabled={loading}
-                  className="flex-1 resize-none input-base text-sm max-h-32"
+                  disabled={isBusy}
+                  className="flex-1 resize-none input-base text-sm max-h-32 disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  disabled={loading || !input.trim()}
+                  disabled={isBusy || !input.trim()}
                   className="p-3 rounded-xl bg-accent hover:bg-accent/90 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                   aria-label="Send message"
                 >
@@ -199,7 +229,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">
-                Answers from portfolio data · LLM integration configurable
+                Powered by NVIDIA NIM · Session-based memory
               </p>
             </form>
           </motion.aside>
