@@ -1,12 +1,20 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Upload, X, ImageIcon, RefreshCw } from 'lucide-react';
 import adminApi from '../../services/adminApi';
 
 export default function ImageUpload({ value, onChange, folder = 'portfolio', label = 'Image', className = '' }) {
   const inputRef = useRef(null);
+
+  // Internal src keeps the preview snappy — updated immediately on upload,
+  // and synced when the parent changes value (e.g. on load or remove).
+  const [src, setSrc]         = useState(value || '');
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver]   = useState(false);
   const [error, setError]         = useState('');
+
+  useEffect(() => {
+    setSrc(value || '');
+  }, [value]);
 
   const upload = async (file) => {
     if (!file) return;
@@ -15,7 +23,9 @@ export default function ImageUpload({ value, onChange, folder = 'portfolio', lab
     setError('');
     setUploading(true);
     try {
-      const { url } = await adminApi.uploadImage(file, folder);
+      const result = await adminApi.uploadImage(file, folder);
+      const url = result?.url || result;
+      setSrc(url);
       onChange(url);
     } catch (e) {
       setError(e.message);
@@ -33,6 +43,7 @@ export default function ImageUpload({ value, onChange, folder = 'portfolio', lab
   };
 
   const handleRemove = () => {
+    setSrc('');
     onChange('');
     if (inputRef.current) inputRef.current.value = '';
   };
@@ -41,10 +52,10 @@ export default function ImageUpload({ value, onChange, folder = 'portfolio', lab
     <div className={`space-y-2 ${className}`}>
       {label && <label className="block text-xs font-medium text-muted-foreground">{label}</label>}
 
-      {value ? (
+      {src ? (
         <div className="relative group w-full rounded-xl overflow-hidden border border-surface-border bg-surface-overlay">
           <img
-            src={value}
+            src={src}
             alt="preview"
             className="w-full h-40 object-cover"
             onError={(e) => { e.target.style.display = 'none'; }}
