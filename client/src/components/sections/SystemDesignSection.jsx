@@ -1,8 +1,14 @@
+import { useState, useEffect } from 'react';
 import { SectionHeader, Card, Tag, ExpandablePanel } from '../../design-system';
 import ArchitectureDiagram from '../shared/ArchitectureDiagram';
+import { api } from '../../services/api';
 
 export default function SystemDesignSection({ section, id }) {
-  const caseStudies = section.content?.caseStudies || [];
+  const [caseStudies, setCaseStudies] = useState([]);
+
+  useEffect(() => {
+    api.getSystemDesignCases().then(setCaseStudies).catch(console.error);
+  }, []);
 
   return (
     <section id={id} className="section-container">
@@ -10,7 +16,7 @@ export default function SystemDesignSection({ section, id }) {
 
       <div className="space-y-8">
         {caseStudies.map((study) => (
-          <Card key={study.id}>
+          <Card key={study._id || study.id}>
             <h3 className="text-xl font-bold text-foreground mb-4">{study.title}</h3>
 
             <div className="grid md:grid-cols-2 gap-6 mb-6">

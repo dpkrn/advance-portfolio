@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Briefcase, FolderGit2, ChevronDown } from 'lucide-react';
 import { SectionHeader, Tag, Badge } from '../../design-system';
+import { api } from '../../services/api';
 
 const categoryConfig = {
   learning: { icon: GraduationCap, badge: 'accent', label: 'Learning' },
@@ -100,7 +101,11 @@ function TimelineCard({ milestone, index }) {
 }
 
 export default function TimelineSection({ section, id }) {
-  const milestones = section.content?.milestones || [];
+  const [milestones, setMilestones] = useState([]);
+
+  useEffect(() => {
+    api.getMilestones().then(setMilestones).catch(console.error);
+  }, []);
 
   return (
     <section id={id} className="section-container">
@@ -112,7 +117,7 @@ export default function TimelineSection({ section, id }) {
 
         <div className="space-y-6">
           {milestones.map((milestone, index) => (
-            <TimelineCard key={milestone.id} milestone={milestone} index={index} />
+            <TimelineCard key={milestone._id || milestone.id} milestone={milestone} index={index} />
           ))}
         </div>
       </div>

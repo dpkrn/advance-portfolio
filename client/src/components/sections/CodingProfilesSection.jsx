@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { ExternalLink, Trophy, Target } from 'lucide-react';
 import { SectionHeader, Card, Badge } from '../../design-system';
+import { api } from '../../services/api';
 
 const platformColors = {
   leetcode: 'text-warning',
@@ -12,7 +14,11 @@ const platformColors = {
 };
 
 export default function CodingProfilesSection({ section, id }) {
-  const platforms = section.content?.platforms || [];
+  const [platforms, setPlatforms] = useState([]);
+
+  useEffect(() => {
+    api.getCodingPlatforms().then(setPlatforms).catch(console.error);
+  }, []);
 
   return (
     <section id={id} className="section-container">
@@ -21,12 +27,12 @@ export default function CodingProfilesSection({ section, id }) {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {platforms.map((platform) => (
           <Card
-            key={platform.id}
+            key={platform._id || platform.platformId}
             className={platform.placeholder ? 'opacity-60 border-dashed' : ''}
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className={`font-semibold text-lg ${platformColors[platform.id] || 'text-foreground'}`}>
+                <h3 className={`font-semibold text-lg ${platformColors[platform.platformId || platform.id] || 'text-foreground'}`}>
                   {platform.name}
                 </h3>
                 {platform.rating && (

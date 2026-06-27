@@ -16,8 +16,9 @@ export const api = {
   getProfile: () => client.get('/profile'),
   getSections: () => client.get('/sections'),
   getSection: (slug) => client.get(`/sections/${slug}`),
-  getProjects: () => client.get('/projects'),
+  getProjects: (params) => client.get('/projects', { params }),
   getProject: (slug) => client.get(`/projects/${slug}`),
+  getMilestones: () => client.get('/timeline'),
   submitContact: (data) => client.post('/contact', data),
   askQuestion: (message, sessionId) => client.post('/ask', { message, sessionId }),
 
@@ -71,6 +72,12 @@ export const api = {
 
     onDone?.();
   },
+
+  getNotebookEntries: (category) => client.get('/notebook', { params: category ? { category } : {} }),
+  getSystemDesignCases: () => client.get('/system-design'),
+  getAchievements: (type) => client.get('/achievements', { params: type ? { type } : {} }),
+  getCodingPlatforms: () => client.get('/coding-profiles'),
+  getGithubData: () => client.get('/github'),
 
   getApprovedReviews: () => client.get('/reviews'),
   submitReview: (data) => client.post('/reviews', data),

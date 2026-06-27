@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { SectionHeader, Card, Tag, Badge } from '../../design-system';
+import { api } from '../../services/api';
 
 const typeVariants = {
   'deep-dive': 'accent',
@@ -9,8 +10,13 @@ const typeVariants = {
 };
 
 export default function NotebookSection({ section, id }) {
-  const { categories = [], entries = [] } = section.content || {};
+  const { categories = [] } = section.content || {};
+  const [entries, setEntries] = useState([]);
   const [activeCategory, setActiveCategory] = useState('All');
+
+  useEffect(() => {
+    api.getNotebookEntries().then(setEntries).catch(console.error);
+  }, []);
 
   const filteredEntries =
     activeCategory === 'All'
@@ -53,7 +59,7 @@ export default function NotebookSection({ section, id }) {
 
       <div className="grid md:grid-cols-2 gap-6">
         {filteredEntries.map((entry) => (
-          <Card key={entry.id}>
+          <Card key={entry._id || entry.id}>
             <div className="flex items-start justify-between mb-3">
               <Badge variant={typeVariants[entry.type] || 'default'}>
                 {entry.type?.replace('-', ' ')}

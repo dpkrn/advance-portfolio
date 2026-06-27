@@ -15,6 +15,8 @@ const reviewSchema = new mongoose.Schema(
       default: 'pending',
     },
     shown: { type: Boolean, default: true },
+    type: { type: String, enum: ['mentor', 'peer', 'project', 'public'], default: 'public' },
+    avatar: { type: String, trim: true },
   },
   { timestamps: true }
 );

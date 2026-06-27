@@ -90,22 +90,22 @@ function TestimonialCard({ t }) {
 }
 
 export default function TestimonialsSection({ section, id }) {
-  const seeded = (section.content?.testimonials || []).map((t) => ({ ...t }));
-  const [approvedReviews, setApprovedReviews] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
     api.getApprovedReviews()
-      .then((reviews) =>
-        setApprovedReviews(
-          reviews.map((r) => ({
+      .then((data) =>
+        setReviews(
+          data.map((r) => ({
             id: r._id,
             quote: r.quote,
             author: r.name,
             role: r.role,
             company: r.company,
-            type: 'public',
+            type: r.type || 'public',
+            avatar: r.avatar,
             likedMost: r.likedMost,
             favoriteProject: r.favoriteProject,
             createdAt: r.createdAt,
@@ -115,15 +115,14 @@ export default function TestimonialsSection({ section, id }) {
       .catch(() => {});
   }, []);
 
-  // Merge and sort newest first; seeded items without createdAt go last
-  const all = [...seeded, ...approvedReviews].sort((a, b) => {
+  const all = reviews.slice().sort((a, b) => {
     if (!a.createdAt && !b.createdAt) return 0;
     if (!a.createdAt) return 1;
     if (!b.createdAt) return -1;
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  const projects = seeded.filter((t) => t.favoriteProject).map((t) => ({ name: t.favoriteProject }));
+  const projects = all.filter((t) => t.favoriteProject).map((t) => ({ name: t.favoriteProject }));
 
   const scroll = (dir) => {
     if (!scrollRef.current) return;

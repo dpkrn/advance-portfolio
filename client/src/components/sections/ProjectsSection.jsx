@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Globe, Users, GitPullRequest, Star, GitFork,
   Package, CheckCircle2, Rocket, ExternalLink,
@@ -6,6 +6,7 @@ import {
 import { SectionHeader, Card, Tag, Badge } from '../../design-system';
 import ProjectMeta from '../projects/ProjectMeta';
 import ProjectCardLink, { ViewDetailsHint } from '../projects/ProjectCardLink';
+import { api } from '../../services/api';
 
 const CATEGORY_META = {
   personal: {
@@ -200,7 +201,11 @@ function ContributionCard({ project }) {
 }
 
 export default function ProjectsSection({ section, id }) {
-  const { projects = [] } = section.content || {};
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    api.getProjects().then(setProjects).catch(console.error);
+  }, []);
 
   const tabs = [
     { id: 'all', label: 'All', count: projects.length },
@@ -262,7 +267,7 @@ export default function ProjectsSection({ section, id }) {
             )}
             <div className="space-y-4">
               {(showGrouped ? personal : filtered).map((p) => (
-                <PersonalProjectCard key={p.id} project={p} />
+                <PersonalProjectCard key={p._id || p.id} project={p} />
               ))}
             </div>
           </div>
@@ -288,7 +293,7 @@ export default function ProjectsSection({ section, id }) {
             )}
             <div className="grid md:grid-cols-2 gap-4">
               {(showGrouped ? ossOwned : filtered).map((p) => (
-                <OSSOwnedCard key={p.id} project={p} />
+                <OSSOwnedCard key={p._id || p.id} project={p} />
               ))}
             </div>
           </div>
@@ -314,7 +319,7 @@ export default function ProjectsSection({ section, id }) {
             )}
             <div className="space-y-3">
               {(showGrouped ? contributions : filtered).map((p) => (
-                <ContributionCard key={p.id} project={p} />
+                <ContributionCard key={p._id || p.id} project={p} />
               ))}
             </div>
           </div>

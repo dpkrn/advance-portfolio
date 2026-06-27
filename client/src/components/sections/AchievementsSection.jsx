@@ -1,14 +1,22 @@
+import { useState, useEffect } from 'react';
 import { Award, Medal, GitPullRequest, ScrollText } from 'lucide-react';
 import { SectionHeader, Card, Badge } from '../../design-system';
+import { api } from '../../services/api';
 
 export default function AchievementsSection({ section, id }) {
-  const { awards, contestRankings, openSource, certifications } = section.content || {};
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    api.getAchievements().then(setItems).catch(console.error);
+  }, []);
+
+  const byType = (type) => items.filter((i) => i.type === type);
 
   const groups = [
-    { title: 'Awards', icon: Award, items: awards, render: (item) => `${item.title} — ${item.org} (${item.year})` },
-    { title: 'Contest Rankings', icon: Medal, items: contestRankings, render: (item) => `${item.platform}: ${item.achievement} (${item.date})` },
-    { title: 'Open Source', icon: GitPullRequest, items: openSource, render: (item) => `${item.project} — ${item.contribution} (${item.impact})` },
-    { title: 'Certifications', icon: ScrollText, items: certifications, render: (item) => `${item.name} — ${item.issuer} (${item.year})` },
+    { title: 'Awards',           icon: Award,          items: byType('award'),           render: (item) => `${item.title} — ${item.org} (${item.year})` },
+    { title: 'Contest Rankings', icon: Medal,          items: byType('contest-ranking'), render: (item) => `${item.platform}: ${item.achievement} (${item.date})` },
+    { title: 'Open Source',      icon: GitPullRequest, items: byType('open-source'),     render: (item) => `${item.project} — ${item.contribution} (${item.impact})` },
+    { title: 'Certifications',   icon: ScrollText,     items: byType('certification'),   render: (item) => `${item.name} — ${item.issuer} (${item.year})` },
   ];
 
   return (

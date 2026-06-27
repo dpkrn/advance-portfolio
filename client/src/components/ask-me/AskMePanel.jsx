@@ -229,7 +229,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">
-                Powered by NVIDIA NIM · Session-based memory
+                 think like its a Deepak talking to you
               </p>
             </form>
           </motion.aside>

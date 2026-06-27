@@ -6,13 +6,19 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import profileRoutes from './routes/profile.routes.js';
-import sectionRoutes from './routes/section.routes.js';
-import contactRoutes from './routes/contact.routes.js';
-import projectRoutes from './routes/project.routes.js';
-import askRoutes from './routes/ask.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import reviewRoutes from './routes/review.routes.js';
+import profileRoutes        from './routes/profile/routes.js';
+import sectionRoutes        from './routes/section/routes.js';
+import contactRoutes        from './routes/contact/routes.js';
+import projectRoutes        from './routes/project/routes.js';
+import askRoutes            from './routes/ask/routes.js';
+import timelineRoutes       from './routes/timeline/routes.js';
+import notebookRoutes       from './routes/notebook/routes.js';
+import systemDesignRoutes   from './routes/system-design/routes.js';
+import achievementsRoutes   from './routes/achievements/routes.js';
+import codingProfilesRoutes from './routes/coding-profiles/routes.js';
+import githubRoutes         from './routes/github/routes.js';
+import reviewRoutes         from './routes/review/routes.js';
+import adminRoutes          from './routes/admin/routes.js';
 
 dotenv.config();
 
@@ -30,13 +36,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/profile', profileRoutes);
-app.use('/api/sections', sectionRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/ask', askRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/profile',         profileRoutes);
+app.use('/api/sections',        sectionRoutes);
+app.use('/api/contact',         contactRoutes);
+app.use('/api/projects',        projectRoutes);
+app.use('/api/ask',             askRoutes);
+app.use('/api/timeline',        timelineRoutes);
+app.use('/api/notebook',        notebookRoutes);
+app.use('/api/system-design',   systemDesignRoutes);
+app.use('/api/achievements',    achievementsRoutes);
+app.use('/api/coding-profiles', codingProfilesRoutes);
+app.use('/api/github',          githubRoutes);
+app.use('/api/reviews',         reviewRoutes);
+app.use('/api/admin',           adminRoutes);
 
 if (isProduction) {
   const clientDist = path.join(__dirname, '../../client/dist');

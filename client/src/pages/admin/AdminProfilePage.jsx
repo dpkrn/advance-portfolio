@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Save, Trash2 } from 'lucide-react';
 import adminApi from '../../services/adminApi';
 import { AdminButton, AdminCard, AdminField, AdminInput, AdminTextarea } from '../../components/admin/AdminUi';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 function ListEditor({ label, items, onChange, fields }) {
   const add = () => onChange([...items, Object.fromEntries(fields.map((f) => [f.key, '']))]);
@@ -108,12 +109,17 @@ export default function AdminProfilePage() {
             <AdminField label="Location">
               <AdminInput value={profile.location || ''} onChange={(e) => update('location', e.target.value)} />
             </AdminField>
-            <AdminField label="Avatar URL">
-              <AdminInput value={profile.avatar || ''} onChange={(e) => update('avatar', e.target.value)} />
-            </AdminField>
             <AdminField label="Resume URL">
               <AdminInput value={profile.resumeUrl || ''} onChange={(e) => update('resumeUrl', e.target.value)} />
             </AdminField>
+          </div>
+          <div className="mt-4">
+            <ImageUpload
+              label="Avatar / Profile Photo"
+              value={profile.avatar || ''}
+              onChange={(url) => update('avatar', url)}
+              folder="portfolio/avatars"
+            />
           </div>
         </AdminCard>
 

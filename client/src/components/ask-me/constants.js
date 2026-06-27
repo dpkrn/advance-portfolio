@@ -8,4 +8,4 @@ export const SUGGESTED_QUESTIONS = [
 ];
 
 export const WELCOME_MESSAGE = (name) =>
-  `Hi! Ask me anything about ${name} — projects, skills, experience, or how to use their work.`;
+  `Hi! Ask me anything about ${name} — projects, skills, experience, or how to use their work as well as personal life.`;

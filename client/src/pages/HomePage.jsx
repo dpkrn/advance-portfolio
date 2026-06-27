@@ -84,7 +84,7 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                Built with React · Redux · Node.js · MongoDB
+                Think twice...Code once.
               </p>
             </div>
             <p className="text-xs text-muted-foreground">
