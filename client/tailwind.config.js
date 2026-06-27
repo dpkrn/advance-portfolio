@@ -17,14 +17,31 @@ export default {
           light: 'var(--accent-light)',
           dark: '#4f46e5',
           glow: 'var(--accent-glow)',
+          bg: 'var(--accent-bg)',
+          border: 'var(--accent-border)',
         },
         muted: {
           DEFAULT: '#71717a',
           foreground: 'var(--muted-foreground)',
         },
-        success: '#22c55e',
-        warning: '#f59e0b',
-        danger: '#ef4444',
+        success: {
+          DEFAULT: '#22c55e',
+          fg: 'var(--success-fg)',
+          bg: 'var(--success-bg)',
+          border: 'var(--success-border)',
+        },
+        warning: {
+          DEFAULT: '#f59e0b',
+          fg: 'var(--warning-fg)',
+          bg: 'var(--warning-bg)',
+          border: 'var(--warning-border)',
+        },
+        danger: {
+          DEFAULT: '#ef4444',
+          fg: 'var(--danger-fg)',
+          bg: 'var(--danger-bg)',
+          border: 'var(--danger-border)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -34,6 +51,7 @@ export default {
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.5s ease-out',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -55,6 +73,7 @@ export default {
       boxShadow: {
         card: 'var(--shadow-card)',
         'card-hover': 'var(--shadow-card-hover)',
+        sidebar: 'var(--shadow-sidebar)',
       },
     },
   },

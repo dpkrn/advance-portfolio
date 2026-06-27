@@ -3,39 +3,91 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light theme — clean zinc palette, high contrast */
+  /* ── Light theme ─────────────────────────────────────── */
   :root {
-    --surface: #fafafa;
+    /* Surfaces */
+    --surface: #f6f7fb;
     --surface-raised: #ffffff;
-    --surface-overlay: #f4f4f5;
-    --surface-border: #e4e4e7;
-    --foreground: #18181b;
-    --muted-foreground: #52525b;
-    --accent-light: #4338ca;
+    --surface-overlay: #eef0f6;
+    --surface-border: #dde1eb;
+
+    /* Foreground */
+    --foreground: #0f1117;
+    --muted-foreground: #5c6478;
+
+    /* Accent (indigo) */
+    --accent-light: #4f46e5;
+    --accent-bg: #eef2ff;
+    --accent-border: #c7d2fe;
     --accent-glow: rgba(99, 102, 241, 0.08);
+
+    /* Status — success */
+    --success-fg: #15803d;
+    --success-bg: #f0fdf4;
+    --success-border: #bbf7d0;
+
+    /* Status — warning */
+    --warning-fg: #92400e;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+
+    /* Status — danger */
+    --danger-fg: #b91c1c;
+    --danger-bg: #fef2f2;
+    --danger-border: #fecaca;
+
+    /* Decorative (off in light mode) */
     --grid-pattern: none;
     --gradient-radial: none;
-    --gradient-text: linear-gradient(to right, #18181b, #4338ca);
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(99, 102, 241, 0.08);
+    --gradient-text: linear-gradient(135deg, #0f1117 0%, #4f46e5 100%);
+
+    /* Shadows */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.07);
+    --shadow-card-hover: 0 6px 24px rgba(0, 0, 0, 0.09), 0 2px 8px rgba(99, 102, 241, 0.1);
+    --shadow-sidebar: 2px 0 16px rgba(0, 0, 0, 0.06);
   }
 
-  /* Dark theme */
+  /* ── Dark theme ──────────────────────────────────────── */
   .dark {
-    --surface: #0a0a0f;
-    --surface-raised: #12121a;
-    --surface-overlay: #1a1a24;
-    --surface-border: #2a2a3a;
-    --foreground: #fafafa;
-    --muted-foreground: #a1a1aa;
-    --accent-light: #a5b4fc;
+    /* Surfaces */
+    --surface: #0b0c14;
+    --surface-raised: #13151f;
+    --surface-overlay: #1b1e2d;
+    --surface-border: #262a3d;
+
+    /* Foreground */
+    --foreground: #f0f2f8;
+    --muted-foreground: #8690aa;
+
+    /* Accent */
+    --accent-light: #818cf8;
+    --accent-bg: rgba(99, 102, 241, 0.1);
+    --accent-border: rgba(99, 102, 241, 0.28);
     --accent-glow: rgba(99, 102, 241, 0.15);
+
+    /* Status */
+    --success-fg: #4ade80;
+    --success-bg: rgba(34, 197, 94, 0.1);
+    --success-border: rgba(34, 197, 94, 0.25);
+
+    --warning-fg: #fbbf24;
+    --warning-bg: rgba(245, 158, 11, 0.1);
+    --warning-border: rgba(245, 158, 11, 0.25);
+
+    --danger-fg: #f87171;
+    --danger-bg: rgba(239, 68, 68, 0.1);
+    --danger-border: rgba(239, 68, 68, 0.25);
+
+    /* Decorative */
     --grid-pattern: linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
-    --gradient-radial: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.12), transparent 50%);
-    --gradient-text: linear-gradient(to right, #ffffff, #a5b4fc, #818cf8);
-    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.04);
-    --shadow-card-hover: 0 8px 32px rgba(99, 102, 241, 0.15);
+    --gradient-radial: radial-gradient(ellipse at top, rgba(99, 102, 241, 0.1), transparent 55%);
+    --gradient-text: linear-gradient(135deg, #ffffff 0%, #a5b4fc 55%, #818cf8 100%);
+
+    /* Shadows */
+    --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.03);
+    --shadow-card-hover: 0 8px 40px rgba(99, 102, 241, 0.14), 0 0 0 1px rgba(99, 102, 241, 0.14);
+    --shadow-sidebar: none;
   }
 
   html {
@@ -49,17 +101,17 @@
   }
 
   ::selection {
-    background-color: rgb(99 102 241 / 0.18);
+    background-color: rgba(99, 102, 241, 0.18);
     color: var(--foreground);
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
 
   ::-webkit-scrollbar-track {
-    background-color: var(--surface);
+    background-color: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -68,11 +120,12 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--muted-foreground) 50%, transparent);
+    background-color: var(--muted-foreground);
   }
 }
 
 @layer components {
+  /* ── Surface / card ──────────────────────────────────── */
   .glass-panel {
     background-color: var(--surface-raised);
     border: 1px solid var(--surface-border);
@@ -80,10 +133,12 @@
     box-shadow: var(--shadow-card);
   }
 
+  /* ── Layout ──────────────────────────────────────────── */
   .section-container {
     @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24;
   }
 
+  /* ── Typography ──────────────────────────────────────── */
   .gradient-text {
     background: var(--gradient-text);
     -webkit-background-clip: text;
@@ -91,55 +146,59 @@
     color: transparent;
   }
 
+  /* ── Navigation ──────────────────────────────────────── */
   .nav-item-active {
-    background-color: color-mix(in srgb, var(--accent-light) 12%, transparent);
+    background-color: var(--accent-bg);
     color: var(--accent-light);
-    border-color: color-mix(in srgb, var(--accent-light) 28%, transparent);
+    border-color: var(--accent-border);
+  }
+
+  /* ── Filter tabs ─────────────────────────────────────── */
+  .filter-tab {
+    background-color: transparent;
+    color: var(--muted-foreground);
+    border-color: transparent;
+  }
+
+  .filter-tab:hover {
+    color: var(--foreground);
+    background-color: var(--surface-overlay);
   }
 
   .filter-tab-active {
     background-color: var(--surface-raised);
     color: var(--accent-light);
-    border-color: color-mix(in srgb, var(--accent-light) 30%, transparent);
+    border-color: var(--accent-border);
     box-shadow: var(--shadow-card);
   }
 
-  .filter-tab {
-    background-color: var(--surface-overlay);
-    color: var(--muted-foreground);
-    border-color: var(--surface-border);
-  }
-
-  .filter-tab:hover {
-    color: var(--foreground);
-  }
-
+  /* ── Icon box ────────────────────────────────────────── */
   .icon-box {
-    background-color: color-mix(in srgb, var(--accent-light) 10%, transparent);
+    background-color: var(--accent-bg);
   }
 
+  /* ── Card hover ──────────────────────────────────────── */
   .card-hover {
     @apply transition-all duration-300;
   }
 
   .card-hover:hover {
-    border-color: color-mix(in srgb, var(--accent-light) 35%, transparent);
+    border-color: var(--accent-border);
     box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
   }
 
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-
+  /* ── Accent link ─────────────────────────────────────── */
   .link-accent {
     color: var(--accent-light);
+    transition: opacity 0.15s;
   }
 
   .link-accent:hover {
-    color: #6366f1;
+    opacity: 0.8;
   }
 
-  /* Decorative backgrounds — dark mode only */
+  /* ── Decorative bg (dark-only) ───────────────────────── */
   .theme-bg-grid {
     display: none;
   }
@@ -154,5 +213,32 @@
 
   .dark .theme-bg-glow {
     display: block;
+  }
+
+  /* ── Form inputs ─────────────────────────────────────── */
+  .input-base {
+    @apply w-full px-4 py-3 rounded-xl text-foreground transition-colors duration-200;
+    background-color: var(--surface-overlay);
+    border: 1px solid var(--surface-border);
+  }
+
+  .input-base::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.6;
+  }
+
+  .input-base:focus {
+    outline: none;
+    border-color: var(--accent-border);
+    background-color: var(--surface-raised);
+  }
+
+  /* ── Section divider line ────────────────────────────── */
+  .section-line {
+    width: 3rem;
+    height: 3px;
+    border-radius: 9999px;
+    background: var(--gradient-text);
+    margin-bottom: 1.5rem;
   }
 }

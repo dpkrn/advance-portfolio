@@ -12,11 +12,11 @@ export default function GitHubSection({ section, id }) {
     section.content || {};
 
   const contributionLevels = [
-    'bg-zinc-100 dark:bg-surface-overlay',
-    'bg-indigo-100 dark:bg-accent/20',
-    'bg-indigo-200 dark:bg-accent/40',
-    'bg-indigo-400 dark:bg-accent/60',
-    'bg-indigo-600 dark:bg-accent',
+    'bg-surface-overlay',
+    'bg-accent-bg border border-accent-border/50',
+    'bg-accent/20',
+    'bg-accent/50',
+    'bg-accent',
   ];
   const githubProfile = profileUrl || (username ? `https://github.com/${username}` : null);
 

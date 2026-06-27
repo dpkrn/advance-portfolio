@@ -5,20 +5,6 @@ import { scrollToSection } from '../../hooks/useScrollSpy';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 
-const iconMap = {
-  home: 'Home',
-  route: 'Route',
-  'folder-kanban': 'Projects',
-  github: 'GitHub',
-  terminal: 'Coding',
-  'book-open': 'Notebook',
-  network: 'System Design',
-  trophy: 'Achievements',
-  'message-square-quote': 'Reviews',
-  sparkles: 'Now',
-  mail: 'Contact',
-};
-
 export default function DashboardLayout({ children }) {
   const dispatch = useAppDispatch();
   const { sidebarOpen, sidebarCollapsed } = useAppSelector((state) => state.ui);
@@ -42,8 +28,15 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="theme-bg-grid fixed inset-0 bg-grid-pattern bg-grid pointer-events-none opacity-40" />
-      <div className="theme-bg-glow fixed inset-0 bg-gradient-radial pointer-events-none" />
+      {/* Decorative backgrounds (dark-mode only) */}
+      <div
+        className="theme-bg-grid fixed inset-0 bg-grid-pattern bg-grid pointer-events-none opacity-50"
+        aria-hidden="true"
+      />
+      <div
+        className="theme-bg-glow fixed inset-0 bg-gradient-radial pointer-events-none"
+        aria-hidden="true"
+      />
 
       <Sidebar
         navItems={navItems}
@@ -58,14 +51,15 @@ export default function DashboardLayout({ children }) {
         open={sidebarOpen}
         navItems={navItems}
         activeSection={activeSection}
+        profile={profile}
         onNavClick={handleNavClick}
         onClose={() => dispatch(setSidebarOpen(false))}
         onOpen={() => dispatch(setSidebarOpen(true))}
       />
 
       <main
-        className={`relative transition-all duration-300 ${
-          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
+        className={`relative transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-60'
         }`}
       >
         {children}
@@ -73,5 +67,3 @@ export default function DashboardLayout({ children }) {
     </div>
   );
 }
-
-export { iconMap };

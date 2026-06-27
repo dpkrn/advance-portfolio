@@ -49,9 +49,9 @@ export function AdminButton({
   ...props
 }) {
   const variants = {
-    primary: 'bg-indigo-600 dark:bg-accent text-white hover:bg-indigo-500 dark:hover:bg-accent-light',
+    primary: 'bg-accent text-white hover:bg-accent/90',
     secondary: 'bg-surface-overlay border border-surface-border text-foreground hover:bg-surface-border/50',
-    danger: 'bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20',
+    danger: 'bg-danger-bg text-danger-fg border border-danger-border hover:bg-danger/20',
     ghost: 'text-muted-foreground hover:text-foreground hover:bg-surface-overlay',
   };
   const sizes = {

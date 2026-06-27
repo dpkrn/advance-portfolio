@@ -11,7 +11,7 @@ export default function AskMeFab({ onClick, className = '' }) {
       transition={{ delay: 0.8, type: 'spring', stiffness: 260, damping: 20 }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-indigo-600 dark:bg-accent text-white shadow-lg shadow-indigo-600/30 dark:shadow-accent/30 hover:bg-indigo-500 dark:hover:bg-accent-light transition-colors ${className}`}
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/30 transition-colors ${className}`}
       aria-label="Ask anything about me"
     >
       <Sparkles className="w-5 h-5" />

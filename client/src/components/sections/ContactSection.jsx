@@ -1,7 +1,36 @@
 import { useState } from 'react';
-import { Send, Mail, MapPin, Clock } from 'lucide-react';
+import { Send, Mail, MapPin, Clock, Github, Linkedin, Twitter, Code } from 'lucide-react';
 import { SectionHeader, Card, Button } from '../../design-system';
 import api from '../../services/api';
+
+const socialIcons = {
+  github: Github,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  dev: Code,
+};
+
+function InfoRow({ icon: Icon, children, href, color = 'text-accent-light' }) {
+  const content = (
+    <div className={`flex items-center gap-3 p-3.5 rounded-xl bg-surface-overlay border border-surface-border transition-colors ${href ? 'hover:border-accent-border cursor-pointer' : ''}`}>
+      <div className="w-8 h-8 rounded-lg icon-box flex items-center justify-center shrink-0">
+        <Icon className={`w-4 h-4 ${color}`} />
+      </div>
+      <span className="text-sm text-foreground">{children}</span>
+    </div>
+  );
+
+  if (href) {
+    return <a href={href}>{content}</a>;
+  }
+  return content;
+}
+
+const FIELDS = [
+  { name: 'name',    label: 'Your name',    type: 'text',  required: true  },
+  { name: 'email',   label: 'Email address', type: 'email', required: true  },
+  { name: 'subject', label: 'Subject',       type: 'text',  required: false },
+];
 
 export default function ContactSection({ section, profile, id }) {
   const { availability, responseTime } = section.content || {};
@@ -20,10 +49,10 @@ export default function ContactSection({ section, profile, id }) {
 
     try {
       await api.submitContact(form);
-      setStatus({ type: 'success', message: 'Message sent! I will get back to you soon.' });
+      setStatus({ type: 'success', message: "Message sent! I'll get back to you soon." });
       setForm({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
-      setStatus({ type: 'error', message: error.message || 'Failed to send message.' });
+      setStatus({ type: 'error', message: error.message || 'Failed to send message. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -33,80 +62,101 @@ export default function ContactSection({ section, profile, id }) {
     <section id={id} className="section-container">
       <SectionHeader title={section.title} subtitle={section.subtitle} />
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <Card hover={false}>
-          <h3 className="text-lg font-semibold mb-6">Get in Touch</h3>
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Info panel */}
+        <Card hover={false} className="space-y-3">
+          <h3 className="text-base font-semibold text-foreground mb-4">Get in Touch</h3>
 
           {profile?.email && (
-            <a
-              href={`mailto:${profile.email}`}
-              className="flex items-center gap-3 p-4 rounded-xl bg-surface-overlay mb-4 card-hover"
-            >
-              <Mail className="w-5 h-5 text-accent-light" />
-              <span>{profile.email}</span>
-            </a>
+            <InfoRow icon={Mail} href={`mailto:${profile.email}`}>
+              {profile.email}
+            </InfoRow>
           )}
 
           {profile?.location && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-surface-overlay mb-4">
-              <MapPin className="w-5 h-5 text-accent-light" />
-              <span className="text-muted-foreground">{profile.location}</span>
-            </div>
+            <InfoRow icon={MapPin} color="text-muted-foreground">
+              {profile.location}
+            </InfoRow>
           )}
 
           {availability && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-surface-overlay mb-4">
-              <Clock className="w-5 h-5 text-success" />
-              <span className="text-muted-foreground">{availability}</span>
-            </div>
+            <InfoRow icon={Clock} color="text-success-fg">
+              {availability}
+            </InfoRow>
           )}
 
           {responseTime && (
-            <p className="text-sm text-muted-foreground">{responseTime}</p>
+            <p className="text-xs text-muted-foreground pt-1 leading-relaxed">{responseTime}</p>
           )}
 
-          {profile?.socialLinks && (
-            <div className="mt-6 pt-6 border-t border-surface-border">
-              <p className="text-sm text-muted-foreground mb-3">Connect elsewhere</p>
-              <div className="flex flex-wrap gap-3">
-                {profile.socialLinks.map((link) => (
-                  <a
-                    key={link.platform}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-accent-light hover:text-accent transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
+          {profile?.socialLinks?.length > 0 && (
+            <div className="pt-4 mt-2 border-t border-surface-border">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                Find me on
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {profile.socialLinks.map((link) => {
+                  const Icon = socialIcons[link.platform] || Mail;
+                  return (
+                    <a
+                      key={link.platform}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-overlay border border-surface-border hover:border-accent-border hover:text-accent-light text-muted-foreground text-xs font-medium transition-all duration-150"
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {link.label}
+                    </a>
+                  );
+                })}
               </div>
             </div>
           )}
         </Card>
 
+        {/* Contact form */}
         <Card hover={false}>
+          <h3 className="text-base font-semibold text-foreground mb-5">Send a Message</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {['name', 'email', 'subject'].map((field) => (
-              <div key={field}>
-                <label htmlFor={field} className="block text-sm text-muted-foreground mb-1.5 capitalize">
-                  {field}
-                </label>
-                <input
-                  id={field}
-                  name={field}
-                  type={field === 'email' ? 'email' : 'text'}
-                  required={field !== 'subject'}
-                  value={form[field]}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl bg-surface-overlay border border-surface-border text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent/50 transition-colors"
-                />
-              </div>
-            ))}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {FIELDS.slice(0, 2).map((field) => (
+                <div key={field.name}>
+                  <label htmlFor={field.name} className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    {field.label} {field.required && <span className="text-danger-fg">*</span>}
+                  </label>
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    type={field.type}
+                    required={field.required}
+                    value={form[field.name]}
+                    onChange={handleChange}
+                    className="input-base"
+                    placeholder={field.label}
+                  />
+                </div>
+              ))}
+            </div>
 
             <div>
-              <label htmlFor="message" className="block text-sm text-muted-foreground mb-1.5">
-                Message
+              <label htmlFor="subject" className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Subject
+              </label>
+              <input
+                id="subject"
+                name="subject"
+                type="text"
+                value={form.subject}
+                onChange={handleChange}
+                className="input-base"
+                placeholder="What's this about?"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-xs font-medium text-muted-foreground mb-1.5">
+                Message <span className="text-danger-fg">*</span>
               </label>
               <textarea
                 id="message"
@@ -115,19 +165,20 @@ export default function ContactSection({ section, profile, id }) {
                 rows={5}
                 value={form.message}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-xl bg-surface-overlay border border-surface-border text-foreground placeholder-muted-foreground/60 focus:outline-none focus:border-accent/50 transition-colors resize-none"
+                className="input-base resize-none"
+                placeholder="Your message..."
               />
             </div>
 
             {status.message && (
-              <p className={`text-sm ${status.type === 'success' ? 'text-success' : 'text-danger'}`}>
+              <p className={`text-sm font-medium ${status.type === 'success' ? 'text-success-fg' : 'text-danger-fg'}`}>
                 {status.message}
               </p>
             )}
 
-            <Button type="submit" disabled={submitting} className="w-full">
+            <Button type="submit" disabled={submitting} className="w-full justify-center">
               <Send className="w-4 h-4" />
-              {submitting ? 'Sending...' : 'Send Message'}
+              {submitting ? 'Sending…' : 'Send Message'}
             </Button>
           </form>
         </Card>

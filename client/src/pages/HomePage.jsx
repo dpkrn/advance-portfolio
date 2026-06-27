@@ -27,17 +27,12 @@ export default function HomePage() {
     dispatch(fetchSections());
   }, [dispatch]);
 
-  // Refetch when returning to the tab so admin reorder changes appear
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState === 'visible') {
-        dispatch(fetchSections());
-      }
+      if (document.visibilityState === 'visible') dispatch(fetchSections());
     };
     const onStorage = (e) => {
-      if (e.key === 'sectionsOrderVersion') {
-        dispatch(fetchSections());
-      }
+      if (e.key === 'sectionsOrderVersion') dispatch(fetchSections());
     };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
@@ -55,7 +50,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <LoadingSpinner message="Loading your digital identity..." />
+        <LoadingSpinner message="Loading portfolio…" />
       </DashboardLayout>
     );
   }
@@ -64,7 +59,7 @@ export default function HomePage() {
     return (
       <DashboardLayout>
         <ErrorState
-          message={`Failed to load portfolio data: ${error}. Make sure the server is running and seeded.`}
+          message={`Failed to load data: ${error}. Make sure the server is running and seeded.`}
           onRetry={() => {
             dispatch(fetchProfile());
             dispatch(fetchSections());
@@ -79,10 +74,26 @@ export default function HomePage() {
       {sections.map((section) => (
         <SectionRenderer key={section.slug} section={section} profile={profile} />
       ))}
-      <footer className="border-t border-surface-border py-8 text-center text-sm text-muted-foreground">
-        <p>Built with React, Redux Toolkit, Node.js & MongoDB</p>
-        <p className="mt-1">© {new Date().getFullYear()} {profile?.name}. Living digital identity.</p>
+
+      <footer className="border-t border-surface-border bg-surface-raised">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-foreground text-sm">{profile?.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{profile?.role}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">
+                Built with React · Redux · Node.js · MongoDB
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} {profile?.name?.split(' ')[0]}
+            </p>
+          </div>
+        </div>
       </footer>
+
       <AskMeWidget profileName={profile?.name?.split(' ')[0] || 'me'} />
     </DashboardLayout>
   );

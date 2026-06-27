@@ -1,5 +1,24 @@
 import { motion } from 'framer-motion';
 
+const variants = {
+  primary:
+    'bg-accent hover:bg-accent/90 text-white shadow-sm shadow-accent/20 focus-visible:ring-accent/50',
+  secondary:
+    'bg-surface-overlay hover:bg-surface-border text-foreground border border-surface-border focus-visible:ring-accent/30',
+  ghost:
+    'hover:bg-surface-overlay text-muted-foreground hover:text-foreground focus-visible:ring-accent/30',
+  outline:
+    'border border-accent-border text-accent-light hover:bg-accent-bg focus-visible:ring-accent/30',
+  danger:
+    'bg-danger-bg hover:bg-danger/20 text-danger-fg border border-danger-border focus-visible:ring-danger/30',
+};
+
+const sizes = {
+  sm: 'px-3 py-1.5 text-xs gap-1.5',
+  md: 'px-4 py-2.5 text-sm gap-2',
+  lg: 'px-6 py-3 text-sm gap-2',
+};
+
 export default function Button({
   children,
   variant = 'primary',
@@ -7,28 +26,17 @@ export default function Button({
   href,
   onClick,
   className = '',
+  disabled = false,
+  type = 'button',
   ...props
 }) {
-  const variants = {
-    primary: 'bg-indigo-600 hover:bg-indigo-500 dark:bg-accent dark:hover:bg-accent-light text-white shadow-md shadow-indigo-600/20 dark:shadow-accent/20',
-    secondary: 'bg-surface-overlay hover:bg-surface-border text-foreground border border-surface-border',
-    ghost: 'hover:bg-surface-overlay text-muted-foreground hover:text-foreground',
-    outline: 'border border-indigo-300 dark:border-accent/50 text-indigo-700 dark:text-accent-light hover:bg-indigo-50 dark:hover:bg-accent/10',
-  };
-
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-5 py-2.5 text-sm',
-    lg: 'px-6 py-3 text-base',
-  };
-
-  const classes = `inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-200 ${variants[variant]} ${sizes[size]} ${className}`;
+  const base = `inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${sizes[size]} ${className}`;
 
   if (href) {
     return (
       <motion.a
         href={href}
-        className={classes}
+        className={base}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         {...props}
@@ -40,11 +48,12 @@ export default function Button({
 
   return (
     <motion.button
-      type="button"
+      type={type}
       onClick={onClick}
-      className={classes}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      disabled={disabled}
+      className={base}
+      whileHover={disabled ? {} : { scale: 1.02 }}
+      whileTap={disabled ? {} : { scale: 0.98 }}
       {...props}
     >
       {children}

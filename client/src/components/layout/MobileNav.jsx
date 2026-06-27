@@ -20,24 +20,35 @@ const iconComponents = {
   mail: Mail,
 };
 
-export default function MobileNav({ open, navItems, activeSection, onNavClick, onClose, onOpen }) {
+export default function MobileNav({ open, navItems, activeSection, onNavClick, onClose, onOpen, profile }) {
   return (
     <>
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-panel rounded-none border-x-0 border-t-0 px-4 py-3 flex items-center justify-between">
-        <span className="font-semibold text-foreground">Portfolio</span>
-        <div className="flex items-center gap-2">
+      {/* Top bar */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface-raised/90 backdrop-blur-md border-b border-surface-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-accent-bg border border-accent-border flex items-center justify-center">
+            <span className="text-xs font-bold text-accent-light">
+              {profile?.name?.charAt(0) || 'P'}
+            </span>
+          </div>
+          <span className="font-semibold text-sm text-foreground">
+            {profile?.name?.split(' ')[0] || 'Portfolio'}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
           <ThemeToggle collapsed />
           <button
             type="button"
             onClick={open ? onClose : onOpen}
-            className="p-2 rounded-lg hover:bg-surface-overlay transition-colors text-foreground"
+            className="p-2 rounded-xl hover:bg-surface-overlay transition-colors text-muted-foreground hover:text-foreground"
             aria-label="Toggle navigation"
           >
-            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </header>
 
+      {/* Drawer */}
       <AnimatePresence>
         {open && (
           <>
@@ -45,41 +56,65 @@ export default function MobileNav({ open, navItems, activeSection, onNavClick, o
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 z-40 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+              transition={{ duration: 0.2 }}
+              className="lg:hidden fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm"
               onClick={onClose}
             />
             <motion.nav
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-surface-raised border-r border-surface-border pt-16 p-4 space-y-1 overflow-y-auto"
+              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-surface-raised border-r border-surface-border flex flex-col"
             >
-              {navItems.map((item) => {
-                const Icon = iconComponents[item.icon] || Home;
-                const isActive = activeSection === item.slug;
+              <div className="px-4 pt-4 pb-3 border-b border-surface-border">
+                {profile && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-accent-bg border border-accent-border flex items-center justify-center shrink-0">
+                      {profile.avatar ? (
+                        <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-sm font-bold text-accent-light">
+                          {profile.name?.charAt(0) || 'P'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">{profile.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{profile.role}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                return (
-                  <button
-                    key={item.slug}
-                    type="button"
-                    onClick={() => onNavClick(item.slug)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
-                      isActive
-                        ? 'nav-item-active'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-surface-overlay'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {item.label}
-                  </button>
-                );
-              })}
+              <div className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+                {navItems.map((item) => {
+                  const Icon = iconComponents[item.icon] || Home;
+                  const isActive = activeSection === item.slug;
+
+                  return (
+                    <button
+                      key={item.slug}
+                      type="button"
+                      onClick={() => onNavClick(item.slug)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 border ${
+                        isActive
+                          ? 'nav-item-active font-medium'
+                          : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-overlay'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent-light' : ''}`} />
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
             </motion.nav>
           </>
         )}
       </AnimatePresence>
 
+      {/* Spacer for fixed header */}
       <div className="lg:hidden h-14" />
     </>
   );

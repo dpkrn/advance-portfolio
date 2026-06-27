@@ -1,7 +1,7 @@
 export default function Tag({ children, className = '' }) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 text-xs font-mono rounded-md bg-zinc-100 dark:bg-surface-overlay text-zinc-600 dark:text-muted-foreground border border-zinc-200 dark:border-surface-border ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 text-xs font-mono rounded-lg bg-surface-overlay text-muted-foreground border border-surface-border hover:border-accent-border hover:text-accent-light transition-colors duration-150 ${className}`}
     >
       {children}
     </span>

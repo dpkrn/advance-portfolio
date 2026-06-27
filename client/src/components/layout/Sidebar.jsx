@@ -21,32 +21,60 @@ const iconComponents = {
   mail: Mail,
 };
 
+function Avatar({ src, name, size = 'md' }) {
+  const dim = size === 'sm' ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm';
+  const initials = name
+    ? name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
+    : 'P';
+
+  return (
+    <div className={`${dim} rounded-xl overflow-hidden bg-accent-bg border border-accent-border flex items-center justify-center shrink-0`}>
+      {src ? (
+        <img
+          src={src}
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      ) : (
+        <span className="font-bold text-accent-light">{initials}</span>
+      )}
+    </div>
+  );
+}
+
 export default function Sidebar({ navItems, activeSection, profile, collapsed, onNavClick }) {
   const dispatch = useAppDispatch();
 
   return (
     <aside
-      className={`hidden lg:flex fixed left-0 top-0 h-screen z-40 flex-col border-r border-surface-border bg-surface-raised transition-colors duration-300 ${
-        collapsed ? 'w-[72px]' : 'w-64'
+      className={`hidden lg:flex fixed left-0 top-0 h-screen z-40 flex-col border-r border-surface-border bg-surface-raised transition-all duration-300 ease-in-out shadow-sidebar ${
+        collapsed ? 'w-[68px]' : 'w-60'
       }`}
     >
-      <div className={`p-4 border-b border-surface-border ${collapsed ? 'px-3' : ''}`}>
-        {!collapsed && profile && (
-          <div>
-            <p className="font-semibold text-foreground truncate">{profile.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{profile.role}</p>
+      {/* Profile header */}
+      <div className={`p-3 border-b border-surface-border ${collapsed ? '' : 'p-4'}`}>
+        {collapsed ? (
+          <div className="flex justify-center">
+            <Avatar src={profile?.avatar} name={profile?.name} size="sm" />
           </div>
-        )}
-        {collapsed && (
-          <div className="w-10 h-10 rounded-xl icon-box flex items-center justify-center mx-auto">
-            <span className="text-accent font-bold text-sm">
-              {profile?.name?.charAt(0) || 'D'}
-            </span>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Avatar src={profile?.avatar} name={profile?.name} />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm text-foreground truncate leading-tight">
+                {profile?.name || 'Portfolio'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5 leading-tight">
+                {profile?.role || ''}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         {navItems.map((item) => {
           const Icon = iconComponents[item.icon] || Home;
           const isActive = activeSection === item.slug;
@@ -56,29 +84,33 @@ export default function Sidebar({ navItems, activeSection, profile, collapsed, o
               key={item.slug}
               type="button"
               onClick={() => onNavClick(item.slug)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 border ${
-                isActive
-                  ? 'nav-item-active'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-overlay'
-              } ${collapsed ? 'justify-center' : ''}`}
               title={collapsed ? item.label : undefined}
+              className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all duration-150 border ${
+                collapsed ? 'px-2 py-2.5 justify-center' : 'px-3 py-2.5'
+              } ${
+                isActive
+                  ? 'nav-item-active font-medium'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-surface-overlay'
+              }`}
             >
-              <Icon className="w-5 h-5 shrink-0" />
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent-light' : ''}`} />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </button>
           );
         })}
       </nav>
 
-      <div className="p-3 border-t border-surface-border space-y-2">
+      {/* Footer controls */}
+      <div className="p-2 border-t border-surface-border space-y-0.5">
         <ThemeToggle collapsed={collapsed} />
         <button
           type="button"
           onClick={() => dispatch(toggleSidebarCollapsed())}
-          className="w-full flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-overlay transition-colors"
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="w-full flex items-center justify-center p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-overlay border border-transparent hover:border-surface-border transition-all duration-200"
         >
-          <motion.span animate={{ rotate: collapsed ? 180 : 0 }}>
-            <ChevronLeft className="w-5 h-5" />
+          <motion.span animate={{ rotate: collapsed ? 180 : 0 }} transition={{ duration: 0.25 }}>
+            <ChevronLeft className="w-4 h-4" />
           </motion.span>
         </button>
       </div>
