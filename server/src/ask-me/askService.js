@@ -30,7 +30,11 @@ export async function* streamAnswer(message, history = []) {
     return;
   }
 
-  // No streaming provider — yield stub answer as a single chunk
+  // No streaming provider — simulate typing by yielding word by word
   const { answer } = stubAnswer(message, context);
-  yield answer;
+  const words = answer.split(' ');
+  for (let i = 0; i < words.length; i++) {
+    yield i === 0 ? words[i] : ' ' + words[i];
+    await new Promise(r => setTimeout(r, 18));
+  }
 }

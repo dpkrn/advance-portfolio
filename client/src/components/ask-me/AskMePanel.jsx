@@ -9,7 +9,7 @@ import AskMessageContent from './AskMessageContent';
 function StreamingCursor() {
   return (
     <span
-      className="inline-block w-[2px] h-[0.9em] bg-current align-middle ml-0.5 animate-[blink_1s_step-end_infinite]"
+      className="inline-block w-[2px] h-[0.9em] bg-current align-middle ml-0.5 animate-blink"
       aria-hidden="true"
     />
   );
