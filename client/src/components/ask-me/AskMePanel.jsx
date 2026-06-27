@@ -87,7 +87,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-semibold text-foreground text-sm">Ask me anything</h2>
-                  <p className="text-xs text-muted-foreground">Projects · Skills · Experience</p>
+                  <p className="text-xs text-muted-foreground">Projects · Skills · Experience · Professional Life </p>
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
