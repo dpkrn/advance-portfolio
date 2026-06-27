@@ -1,0 +1,22 @@
+{
+  "name": "advance-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Living digital identity — developer portfolio",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "build": "npm run build -w client",
+    "seed": "npm run seed -w server",
+    "start": "npm run start -w server",
+    "start:prod": "npm run build && NODE_ENV=production npm run start -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

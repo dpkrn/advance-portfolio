@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <rect width="800" height="200" fill="#12121a"/>
+  <rect x="0" y="0" width="800" height="200" fill="url(#g)" opacity="0.5"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="800" y2="200">
+      <stop offset="0%" stop-color="#00add8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <text x="40" y="90" fill="white" font-family="Inter,sans-serif" font-size="36" font-weight="700">StreamMetrics</text>
+  <text x="40" y="130" fill="#a1a1aa" font-family="Inter,sans-serif" font-size="18">Real-time Analytics Pipeline</text>
+</svg>
