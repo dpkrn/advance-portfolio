@@ -13,6 +13,7 @@ const expandableSchema = new mongoose.Schema(
 const timelineMilestoneSchema = new mongoose.Schema(
   {
     date:        { type: String, required: true },
+    endDate:     { type: String },
     category:    { type: String, enum: ['career', 'project', 'learning', 'achievement'], default: 'career' },
     title:       { type: String, required: true },
     description: String,

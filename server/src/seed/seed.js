@@ -578,14 +578,14 @@ const milestonesData = [
     expandable: { details: 'All in1 URL (allin1url.in) — a personalized social profile link manager with custom subdomains, three-tier link privacy, advanced click analytics, and customizable email notifications. Built solo with React 18, Node.js 22, MongoDB, Docker, deployed on EC2 + Vercel.' },
   },
   {
-    order: 5, date: '2025-02', category: 'career', visible: true,
+    order: 5, date: '2025-02', endDate: '2025-05', category: 'career', visible: true,
     title: 'Software Engineer Intern — MountBlue Technologies',
     description: 'First professional role. Built a Trello-inspired task management platform with React, Node.js, and MongoDB.',
     tags: ['Internship', 'React', 'Node.js', 'MongoDB'],
-    expandable: { details: 'Developed a full-featured Trello-inspired task management platform with board, list, and card-based workflow. Engineered secure REST APIs, drag-and-drop state management, and real-time workflow updates. Feb 2025 – May 2025, Bangalore.' },
+    expandable: { details: 'Developed a full-featured Trello-inspired task management platform with board, list, and card-based workflow. Engineered secure REST APIs, drag-and-drop state management, and real-time workflow updates. Bangalore.' },
   },
   {
-    order: 6, date: '2025-05', category: 'career', visible: true,
+    order: 6, date: '2025-05', endDate: 'present', category: 'career', visible: true,
     title: 'Software Engineer — Skor Technology (via MountBlue)',
     description: 'Promoted to full-time SE. Owns backend of SkorCard digital credit card platform serving 50K+ active users.',
     tags: ['Fintech', 'Microservices', 'Go', 'Banking APIs'],

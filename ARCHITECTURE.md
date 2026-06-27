@@ -1,391 +1,362 @@
 # Advance Portfolio — Architecture
 
-A living digital identity platform built as a scalable, section-driven developer portfolio.
+A living digital identity platform. Section-driven, MongoDB-backed, with a streaming AI chatbot that knows your entire professional history.
 
 ---
 
-## 1. UI/UX Architecture
-
-### Design Philosophy
-
-| Audience | First 30 Seconds | Deep Engagement |
-|----------|------------------|-----------------|
-| Recruiters | Hero stats, role clarity, resume CTA, social proof | Projects hub, achievements, testimonials |
-| Senior Engineers | Tech stack tags, architecture diagrams | System design hub, tradeoffs, engineering notebook |
-
-### Information Architecture
+## 1. System Overview
 
 ```
-/ (Single Page Application with scroll-spy navigation)
-├── Hero (#hero)
-├── Career Journey (#journey)
-├── Projects Hub (#projects)
-├── GitHub Hub (#github-hub)
-├── Coding Profiles (#coding-profiles)
-├── Engineering Notebook (#notebook)
-├── System Design Hub (#system-design)
-├── Achievements (#achievements)
-├── Testimonials (#testimonials)
-├── Now (#now)
-└── Contact (#contact)
+Browser
+  │
+  ├── React SPA (Vite :5173)
+  │     ├── Section registry → lazy-loaded section components
+  │     ├── Redux store (profile, sections, ui)
+  │     ├── Ask Me panel → SSE stream consumer
+  │     └── Admin CMS → JWT-authenticated API calls
+  │
+  └── Express API (:5001)
+        ├── Public routes  → read MongoDB, return JSON
+        ├── Admin routes   → CRUD + GitHub sync + image upload
+        ├── Ask routes     → AI orchestration (stream / non-stream)
+        └── External services
+              ├── GitHub  (GraphQL + REST)
+              ├── Cloudinary (image upload)
+              └── NVIDIA NIM (LLM streaming)
 ```
-
-### Navigation Model
-
-- **Dashboard-style sidebar** (desktop): Persistent left nav with active section highlighting via Intersection Observer scroll-spy
-- **Mobile drawer**: Hamburger menu with slide-in navigation
-- **Collapsible sidebar**: Icon-only mode for focused content reading
 
 ---
 
-## 2. Page Hierarchy
+## 2. Server Architecture
+
+### Folder Structure
+
+```
+server/src/
+├── config/                   # Lazy env-var getters (read at call time, not import time)
+│   ├── cloudinary.js         # getCloudinaryConfig()
+│   ├── github.js             # GITHUB_USERNAME, GITHUB_*_URL, getGithubToken()
+│   ├── nvidia.js             # NVIDIA_BASE_URL, getNvidiaApiKey/Model(), getLlmProvider()
+│   └── index.js              # re-exports all
+│
+├── external-services/        # All third-party API integrations live here
+│   ├── cloudinary/
+│   │   └── index.js          # uploadToCloudinary(buffer, folder), deleteFromCloudinary(publicId)
+│   ├── github/
+│   │   └── index.js          # githubGraphQL(query, token), githubRest(path, token), syncFromGithub(token, config)
+│   └── llmModels/
+│       └── nvidia.js         # callNvidia(msg, history, ctx), callNvidiaStream*(msg, history, ctx)
+│
+├── ask-me/                   # AI Q&A orchestration layer
+│   ├── askService.js         # generateAnswer(), streamAnswer() — calls external-services/llmModels
+│   ├── portfolioContext.js   # loads DB → builds markdown context string for LLM
+│   ├── stubAnswers.js        # keyword-matching fallback (no API key needed)
+│   └── llmModels/
+│       └── index.js          # getProvider(), getStreamProvider() — maps LLM_PROVIDER → fn
+│
+├── controllers/              # Express route handlers, one folder per resource
+│   ├── admin/                # login, me
+│   ├── ask/                  # ask + stream endpoints, session listing
+│   ├── github/               # public getter, admin sync/update/config
+│   ├── upload/               # Cloudinary upload + delete
+│   ├── profile/
+│   ├── project/
+│   ├── section/
+│   ├── timeline/
+│   ├── notebook/
+│   ├── system-design/
+│   ├── achievements/
+│   ├── coding-profiles/
+│   ├── review/
+│   └── contact/
+│
+├── middleware/
+│   ├── auth.js               # requireAdmin — JWT verification
+│   └── upload.js             # multer memory-storage, 5 MB image-only filter
+│
+├── models/                   # Mongoose schemas
+│   ├── Profile.js
+│   ├── Section.js            # polymorphic section registry
+│   ├── Project.js
+│   ├── TimelineMilestone.js
+│   ├── NotebookEntry.js
+│   ├── SystemDesignCase.js
+│   ├── Achievement.js
+│   ├── CodingPlatform.js
+│   ├── GithubData.js         # singleton — synced from GitHub API
+│   ├── Review.js
+│   ├── AskSession.js         # visitor chat history
+│   └── ContactMessage.js
+│
+├── routes/
+│   ├── admin/routes.js       # all /api/admin/* routes
+│   └── [resource]/routes.js  # one router per public resource
+│
+└── seed/seed.js              # SEED_FORCE=1 npm run seed — wipes and rebuilds all collections
+```
+
+### Why `config/` is separate from `external-services/`
+
+ES module `import` statements are hoisted and evaluated before the `dotenv.config()` call in `index.js`. If `cloudinary.config({ api_key: process.env.X })` ran at module scope it would capture `undefined`. The `config/` getters are plain functions that read `process.env` at call time (inside request handlers), so they always see the populated env.
+
+### AI Request Flow
+
+```
+POST /api/ask/stream
+  │
+  ├── controller validates session, appends user message to AskSession
+  ├── askService.streamAnswer(message, history)
+  │     ├── portfolioContext.buildPortfolioContext()  → DB reads → markdown string
+  │     ├── getStreamProvider()  →  callNvidiaStream (or null)
+  │     │
+  │     ├── [LLM path]  yield* callNvidiaStream(msg, history, ctx)
+  │     │     └── NVIDIA NIM SSE → async generator yields text chunks
+  │     │
+  │     └── [stub path]  yield stubAnswer(msg, ctx)  (single chunk)
+  │
+  └── controller pipes generator chunks as SSE: "data: {chunk}\n\n"
+      final "data: [DONE]\n\n"
+```
+
+### GitHub Sync Flow
+
+```
+POST /api/admin/github/sync
+  │
+  ├── reads existing GithubData.config (pinnedRepos, repoDisplayCount, activityDisplayCount)
+  ├── external-services/github/syncFromGithub(token, config)
+  │     ├── githubGraphQL  →  user, followers, repositories, contributionCalendar
+  │     └── githubRest     →  /users/{username}/events/public
+  │     builds: stats, contributionGraph (52w × 7d levels 0-4), languages, repositories, activityTimeline
+  └── GithubData.findOneAndUpdate({}, { ...synced, config: existing.config }, { upsert: true })
+```
+
+---
+
+## 3. Client Architecture
+
+### Component Tree
 
 ```
 App
-└── Routes
-    └── HomePage
-        ├── DashboardLayout
-        │   ├── Sidebar (desktop)
-        │   └── MobileNav (mobile)
-        ├── SectionRenderer × N (dynamic from MongoDB)
-        │   └── [SectionComponent] (from registry)
-        └── Footer
+├── Routes
+│   ├── / → HomePage
+│   │    ├── DashboardLayout
+│   │    │   ├── Sidebar (desktop, collapsible)
+│   │    │   └── MobileNav
+│   │    ├── SectionRenderer × N   ← dynamic from MongoDB
+│   │    │   └── registry.js maps slug → lazy React component
+│   │    ├── AskMeWidget (FAB + panel)
+│   │    └── Footer
+│   │
+│   └── /admin → AdminLayout
+│        ├── /admin              → AdminDashboardPage
+│        ├── /admin/profile      → AdminProfilePage
+│        ├── /admin/sections     → AdminSectionPage
+│        ├── /admin/projects     → AdminProjectsPage      (AdminCollectionPage)
+│        ├── /admin/timeline     → AdminTimelinePage      (AdminCollectionPage)
+│        ├── /admin/notebook     → AdminNotebookPage      (AdminCollectionPage)
+│        ├── /admin/system-design→ AdminSystemDesignPage  (AdminCollectionPage)
+│        ├── /admin/achievements → AdminAchievementsPage  (AdminCollectionPage)
+│        ├── /admin/coding-profiles → AdminCodingProfilesPage (AdminCollectionPage)
+│        ├── /admin/github       → AdminGithubPage
+│        ├── /admin/reviews      → AdminReviewsPage
+│        └── /admin/ask-sessions → AdminAskSessionsPage
 ```
 
-Future routes (no redesign needed):
+### Section Registry Pattern
 
-```
-/resume          → PDF viewer or redirect
-/blog/:slug      → Individual notebook entry
-/projects/:slug  → Deep-dive project case study
-/admin           → CMS for content management
-```
+```js
+// registry.js
+const registry = {
+  'hero':           React.lazy(() => import('./HeroSection')),
+  'timeline':       React.lazy(() => import('./TimelineSection')),
+  'projects':       React.lazy(() => import('./ProjectsSection')),
+  'github-hub':     React.lazy(() => import('./GitHubSection')),
+  // ...
+};
 
----
-
-## 3. Component Hierarchy
-
-```
-src/
-├── App.jsx
-├── pages/
-│   └── HomePage.jsx                 # Data fetching, scroll-spy, SEO
-├── components/
-│   ├── layout/
-│   │   ├── DashboardLayout.jsx      # Shell + nav orchestration
-│   │   ├── Sidebar.jsx
-│   │   └── MobileNav.jsx
-│   └── sections/
-│       ├── registry.js              # Section type → component map
-│       ├── SectionRenderer.jsx      # Dynamic section loader
-│       ├── HeroSection.jsx
-│       ├── TimelineSection.jsx
-│       ├── ProjectsSection.jsx
-│       ├── GitHubSection.jsx
-│       ├── CodingProfilesSection.jsx
-│       ├── NotebookSection.jsx
-│       ├── SystemDesignSection.jsx
-│       ├── AchievementsSection.jsx
-│       ├── TestimonialsSection.jsx
-│       ├── NowSection.jsx
-│       └── ContactSection.jsx
-├── design-system/                   # Reusable UI primitives
-│   ├── Button, Card, Badge, Tag
-│   ├── SectionHeader, StatCard
-│   ├── ExpandablePanel
-│   └── LoadingSpinner, ErrorState
-├── store/
-│   ├── index.js
-│   └── slices/
-│       ├── profileSlice.js
-│       ├── sectionsSlice.js
-│       └── uiSlice.js
-├── services/
-│   └── api.js
-└── hooks/
-    ├── useStore.js
-    └── useScrollSpy.js
+// SectionRenderer.jsx
+const Component = registry[section.type];
+return <Suspense fallback={<Spinner />}><Component section={section} id={section.slug} /></Suspense>;
 ```
 
-### Adding a New Section (Scalability)
+Adding a new section requires zero changes to routing or layout — create the component, register it, insert a MongoDB document.
 
-1. Create `NewSection.jsx` in `components/sections/`
-2. Register in `registry.js`: `{ 'new-type': NewSection }`
-3. Add `'new-type'` to Section model enum in `server/src/models/Section.js`
-4. Insert document via API or seed — **no layout or routing changes required**
+### Chat Persistence
 
----
+```
+useAskMe hook
+  │
+  ├── getOrCreateSessionId()  →  localStorage.ask_session_id
+  ├── useState(() => loadPersistedMessages(sessionId))  ← initialised from localStorage
+  ├── useEffect([messages])  →  persistMessages(sessionId, messages)  (filters streaming:true)
+  │
+  ├── sendMessage()  →  api.askQuestionStream()  →  SSE chunks  →  setMessages()
+  │
+  └── clearChat()
+        ├── localStorage.removeItem(ask_messages_{oldId})  ← local only, MongoDB untouched
+        └── new sessionId  →  localStorage.ask_session_id
+```
 
-## 4. MongoDB Schema Design
+### `AdminCollectionPage` — Generic CRUD Component
 
-### Profile Collection
+All collection admin pages pass a config object:
 
-```javascript
+```js
 {
-  name: String,           // required
-  role: String,           // required
-  tagline: String,
-  summary: String,        // required — hero paragraph
-  avatar: String,
-  resumeUrl: String,
-  location: String,
-  email: String,
-  socialLinks: [{ platform, url, icon, label }],
-  quickStats: [{ label, value, icon, href }],
-  seo: { title, description, keywords[], ogImage },
-  timestamps
-}
-```
-
-### Section Collection (Generic, Polymorphic)
-
-```javascript
-{
-  slug: String,           // unique, URL-safe identifier
-  type: String,           // enum — maps to client registry
-  title: String,
-  subtitle: String,
-  description: String,
-  icon: String,           // lucide icon key
-  order: Number,          // nav + render order
-  visible: Boolean,
-  featured: Boolean,
-  navLabel: String,
-  metadata: Mixed,        // extensible key-value
-  content: Mixed,         // section-specific payload
-  timestamps
-}
-```
-
-**Content shapes by type:**
-
-| Type | Content Structure |
-|------|-------------------|
-| `hero` | `{ highlights[], ctaPrimary, ctaSecondary }` |
-| `timeline` | `{ milestones[{ id, date, category, title, description, tags, expandable }] }` |
-| `projects` | `{ projects[{ architecture, challenges, tradeoffs, lessonsLearned, reviews }] }` |
-| `github` | `{ username, stats, contributionGraph, languages, repositories, badges, activityTimeline }` |
-| `coding-profiles` | `{ platforms[{ id, name, url, stats, rating, rank }] }` |
-| `notebook` | `{ categories[], entries[{ type, category, title, excerpt, tags }] }` |
-| `system-design` | `{ caseStudies[{ problem, approach, scalability, patterns, failureAnalysis }] }` |
-| `achievements` | `{ awards[], contestRankings[], openSource[], certifications[] }` |
-| `testimonials` | `{ testimonials[{ quote, author, role, type }] }` |
-| `now` | `{ learningGoals[], currentProjects[], books[], researchTopics[] }` |
-| `contact` | `{ availability, responseTime, formFields[] }` |
-| `custom` | Any JSON — renders fallback or custom component |
-
-### ContactMessage Collection
-
-```javascript
-{
-  name, email, subject, message,
-  status: 'new' | 'read' | 'replied' | 'archived',
-  timestamps
+  title:       'Projects',
+  icon:        FolderKanban,
+  fetchAll:    adminApi.getProjects,
+  create:      adminApi.createProject,
+  update:      adminApi.updateProject,
+  remove:      adminApi.deleteProject,
+  idKey:       'slug',          // field used as item identifier
+  labelKey:    'name',          // field shown in dropdown
+  template:    { ... },         // default JSON for new items
+  imageFields: [                // optional — renders ImageUpload above JSON editor
+    { key: 'thumbnail', label: 'Thumbnail', folder: 'portfolio/projects' }
+  ],
 }
 ```
 
 ---
 
-## 5. Redux State Structure
+## 4. Data Models
 
-```javascript
+### GithubData (singleton)
+
+```js
 {
-  profile: {
-    data: Profile | null,
-    loading: boolean,
-    error: string | null
+  username:          String,
+  profileUrl:        String,
+  stats: {
+    totalCommits, totalRepos, stars, followers, contributionsThisYear
   },
-  sections: {
-    items: Section[],
-    loading: boolean,
-    error: string | null,
-    activeSection: string    // scroll-spy active slug
-  },
-  ui: {
-    sidebarOpen: boolean,    // mobile drawer
-    sidebarCollapsed: boolean,
-    theme: 'dark'
+  contributionGraph: [[level: 0-4]],   // 52 weeks × 7 days
+  languages:         [{ name, percentage, color }],
+  repositories:      [{ name, description, stars, forks, language, updated, url }],
+  badges:            [{ label, icon }],
+  activityTimeline:  [{ date, type, repo, message }],
+  config: {
+    pinnedRepos:          [String],   // shown first regardless of stars
+    repoDisplayCount:     Number,     // max repos shown on frontend
+    activityDisplayCount: Number,     // max activity entries shown
   }
 }
 ```
 
-**Async thunks:** `fetchProfile`, `fetchSections`
+### AskSession
 
-**Future slices:** `contactSlice` (form state), `filtersSlice` (notebook/project filters), `adminSlice`
-
----
-
-## 6. Folder Structure
-
+```js
+{
+  sessionId: String,   // from client localStorage — stable across visits
+  messages: [{
+    role:      'user' | 'assistant',
+    content:   String,
+    timestamp: Date,
+  }],
+  timestamps
+}
 ```
-advance-portfolio/
-├── package.json                 # npm workspaces root
-├── ARCHITECTURE.md              # This document
-├── README.md
-├── client/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── design-system/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── store/
-│   ├── index.html
-│   ├── tailwind.config.js
-│   └── vite.config.js
-└── server/
-    ├── src/
-    │   ├── controllers/
-    │   ├── models/
-    │   ├── routes/
-    │   ├── seed/
-    │   ├── app.js
-    │   └── index.js
-    └── .env.example
+
+### Project
+
+```js
+{
+  slug, name, tagline, role, category,   // 'personal' | 'open-source-owned' | 'open-source-contribution'
+  order, visible, featured, deployed,
+  thumbnail,                              // Cloudinary URL
+  techStack: [String],
+  metrics:   { activeUsers, stars, forks, downloads, uptime },
+  highlights: [String],
+  description, readme,
+  architecture: { description, diagram, patterns: [String] },
+  challenges:   [{ title, description, solution }],
+  tradeoffs:    [{ decision, pros, cons, chosen }],
+  lessonsLearned: [String],
+  links: { live, github, npm, docs },
+}
 ```
 
 ---
 
-## 7. Design System
+## 5. API Reference
 
-### Color Palette
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `surface` | `#0a0a0f` | Page background |
-| `surface-raised` | `#12121a` | Cards, sidebar |
-| `surface-overlay` | `#1a1a24` | Inputs, nested panels |
-| `surface-border` | `#2a2a3a` | Borders, dividers |
-| `accent` | `#6366f1` | Primary actions, highlights |
-| `accent-light` | `#818cf8` | Hover, links |
-| `muted-foreground` | `#a1a1aa` | Secondary text |
-| `success` | `#22c55e` | Status, availability |
-| `warning` | `#f59e0b` | Badges, alerts |
-| `danger` | `#ef4444` | Errors |
-
-### Typography
-
-- **Sans:** Inter — body, UI
-- **Mono:** JetBrains Mono — code, stats, diagrams
-- **Scale:** 5xl–7xl hero, 3xl–4xl section headers, lg body, sm captions
-
-### Components
-
-- `glass-panel` — frosted card with backdrop blur
-- `gradient-text` — white → accent gradient headings
-- `card-hover` — border glow on hover
-- `section-container` — max-width + responsive padding
-
----
-
-## 8. Responsive Layout Strategy
-
-| Breakpoint | Layout |
-|------------|--------|
-| `< lg` | Full-width content, mobile header, drawer nav |
-| `≥ lg` | Fixed sidebar (256px / 72px collapsed), content offset |
-| `≥ md` | 2-column grids for cards |
-| `≥ xl` | 3–4 column grids (coding profiles) |
-
-- Mobile-first Tailwind utilities
-- `section-container` max-width 6xl (72rem)
-- Timeline alternates left/right on desktop, single column on mobile
-- Horizontal scroll for GitHub contribution graph on small screens
-
----
-
-## 9. Animation Strategy
-
-**Library:** Framer Motion
-
-| Pattern | Usage |
-|---------|-------|
-| `fadeInUp` | Hero stagger, section entries |
-| `whileInView` | Cards animate on scroll (once) |
-| `staggerChildren` | Hero stat grid |
-| `AnimatePresence` | Expandable panels, mobile drawer |
-| `whileHover/Tap` | Buttons (scale 1.02 / 0.98) |
-
-**Performance:** `viewport={{ once: true }}` prevents re-animation; CSS transitions for hover states.
-
----
-
-## 10. Scalability Plan
-
-### Content Scaling
-
-- All sections are MongoDB documents — add/edit without deploys (with admin UI)
-- `content: Mixed` allows schema evolution per section
-- `custom` type + registry fallback for experimental sections
-
-### Code Scaling
-
-- Section registry pattern decouples routing from content types
-- Design system prevents UI drift
-- npm workspaces allow future packages: `@portfolio/ui`, `@portfolio/types`
-
-### Platform Integrations (Future)
-
-- GitHub API → live contribution graph
-- LeetCode/Codeforces APIs → live stats
-- MDX/blog CMS → engineering notebook
-- Admin dashboard → CRUD for all collections
-
----
-
-## 11. SEO Strategy
-
-- Dynamic `<title>` and meta description from Profile.seo via `useSeo` hook
-- Keywords meta tag injected from `Profile.seo.keywords`
-- Open Graph tags (`og:title`, `og:description`, `og:image`, `og:url`)
-- Twitter card meta tags
-- JSON-LD structured data (`Person` schema) injected at runtime
-- `robots.txt` and `sitemap.xml` in `client/public/`
-- Semantic HTML: `<section>`, `<article>`, `<blockquote>`, heading hierarchy
-- `theme-color` meta for mobile browsers
-- Future: SSR/SSG via Next.js migration path for crawlers that don't execute JS
-
----
-
-## 12. Performance Optimization
-
-| Area | Strategy |
-|------|----------|
-| Bundle | Vite code splitting via `React.lazy` per section — **implemented** in `registry.js` |
-| Data | Single API calls on mount; cache in Redux |
-| Images | WebP/AVIF, lazy loading, CDN; SVG placeholders in `client/public/` |
-| Animations | `once: true` viewport; prefer CSS for micro-interactions |
-| Fonts | Preconnect + subset (Inter, JetBrains Mono) |
-| API | MongoDB indexes on `slug`, `type`, `visible+order` |
-| Production | `npm run start:prod` — Express serves `client/dist` + SPA fallback |
-
----
-
-## API Endpoints
+### Public Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/health` | Health check |
 | GET | `/api/profile` | Profile document |
-| PUT | `/api/profile` | Upsert profile |
 | GET | `/api/sections` | All visible sections (ordered) |
-| GET | `/api/sections/:slug` | Single section |
-| GET | `/api/sections/type/:type` | Sections by type |
-| POST | `/api/sections` | Create section |
-| PUT | `/api/sections/:slug` | Update section |
+| GET | `/api/projects` | All visible projects (ordered) |
+| GET | `/api/github` | Cached GitHub data |
+| GET | `/api/timeline` | Timeline milestones |
+| GET | `/api/notebook` | Notebook entries |
+| GET | `/api/system-design` | System design cases |
+| GET | `/api/achievements` | Achievements |
+| GET | `/api/coding-profiles` | Coding platform stats |
+| GET | `/api/reviews` | Approved reviews |
+| POST | `/api/ask` | Non-streaming AI answer |
+| POST | `/api/ask/stream` | SSE streaming AI answer |
 | POST | `/api/contact` | Submit contact form |
+
+### Admin Endpoints (JWT required)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/admin/login` | Get JWT token |
+| POST | `/api/admin/upload` | Upload image to Cloudinary |
+| GET/PUT | `/api/admin/profile` | Profile CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/projects/:slug` | Project CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/timeline/:id` | Timeline CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/notebook/:slug` | Notebook CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/system-design/:slug` | System design CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/achievements/:id` | Achievements CRUD |
+| GET/POST/PUT/DELETE | `/api/admin/coding-profiles/:platformId` | Coding platforms CRUD |
+| GET/PUT/PATCH | `/api/admin/github` | GitHub data read/update/config |
+| POST | `/api/admin/github/sync` | Trigger live GitHub sync |
+| GET | `/api/admin/ask/sessions` | Visitor chat sessions |
+| GET/PATCH/DELETE | `/api/admin/reviews/:id` | Review moderation |
 
 ---
 
-## Getting Started
+## 6. Design System
 
-```bash
-npm install
-cp server/.env.example server/.env
-npm run seed
-npm run dev
-```
+### CSS Variable Tokens
 
-- Client: http://localhost:5173
-- Server: http://localhost:5001
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--surface` | `#0a0a0f` | Page background |
+| `--surface-raised` | `#12121a` | Cards, sidebar |
+| `--surface-overlay` | `#1a1a24` | Inputs, nested panels |
+| `--surface-border` | `#2a2a3a` | Borders |
+| `--accent` | `#6366f1` | Primary actions |
+| `--accent-light` | `#818cf8` | Hover, links, icons |
+| `--foreground` | `#f4f4f5` | Primary text |
+| `--muted-foreground` | `#a1a1aa` | Secondary text |
+| `--success-fg` | `#22c55e` | Status, availability |
+| `--danger` | `#ef4444` | Errors |
+
+### Utility Classes
+
+| Class | Effect |
+|-------|--------|
+| `glass-panel` | frosted card with backdrop-blur border |
+| `gradient-text` | white → accent gradient heading |
+| `card-hover` | border glow + lift on hover |
+| `section-container` | max-width 72rem + responsive padding |
+| `icon-box` | subtle inset background for icon containers |
+| `filter-tab` / `filter-tab-active` | pill tab styles |
+
+---
+
+## 7. Adding a New Section
+
+1. Create `client/src/components/sections/MySection.jsx`
+2. Add to `registry.js`: `'my-type': React.lazy(() => import('./MySection'))`
+3. Add `'my-type'` to the `type` enum in `server/src/models/Section.js`
+4. Insert a document via Admin → Sections or the seed file
+
+No routing changes, no layout changes. The section appears automatically in nav and content order.

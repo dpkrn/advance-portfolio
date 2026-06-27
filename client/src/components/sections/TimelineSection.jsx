@@ -4,6 +4,16 @@ import { GraduationCap, Briefcase, FolderGit2, ChevronDown } from 'lucide-react'
 import { SectionHeader, Tag, Badge } from '../../design-system';
 import { api } from '../../services/api';
 
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatDate(str) {
+  if (!str) return '';
+  if (str.toLowerCase() === 'present') return 'Present';
+  const [year, month] = str.split('-');
+  if (!month) return year;
+  return `${MONTHS[parseInt(month, 10) - 1]} ${year}`;
+}
+
 const categoryConfig = {
   learning: { icon: GraduationCap, badge: 'accent', label: 'Learning' },
   career:   { icon: Briefcase,    badge: 'success', label: 'Career'   },
@@ -36,7 +46,10 @@ function TimelineCard({ milestone, index }) {
               <Icon className="w-3 h-3 mr-1 inline-block" />
               {config.label}
             </Badge>
-            <span className="text-xs font-mono text-muted-foreground">{milestone.date}</span>
+            <span className="text-xs font-mono text-muted-foreground">
+              {formatDate(milestone.date)}
+              {milestone.endDate && ` – ${formatDate(milestone.endDate)}`}
+            </span>
           </div>
 
           <h3 className="text-base font-semibold text-foreground mb-2 leading-snug">{milestone.title}</h3>
