@@ -55,6 +55,7 @@ function AssistantContent({ content, streaming }) {
 
 export default function AskMePanel({ open, onClose }) {
   const { messages, loading, isBusy, error, sendMessage, clearChat } = useAskMe();
+  const [greeting] = useState(() => WELCOME_MESSAGE());
   const [input, setInput] = useState('');
   const inputRef  = useRef(null);
   const scrollRef = useRef(null);
@@ -146,7 +147,7 @@ export default function AskMePanel({ open, onClose }) {
                 </div>
                 <div className="glass-panel px-4 py-3 flex-1 min-w-0">
                   <p className="text-sm text-foreground leading-relaxed">
-                    {WELCOME_MESSAGE()}
+                    {greeting}
                   </p>
                 </div>
               </div>
