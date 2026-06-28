@@ -11,3 +11,6 @@ coverage/
 # Local files — contain sensitive info or personal drafts, do not commit
 SKILLS.md
 linkedinpost.md
+.vercel
+.env*
+!client/.env
