@@ -4,6 +4,7 @@ import { fetchProfile } from '../store/slices/profileSlice';
 import { fetchSections } from '../store/slices/sectionsSlice';
 import { useScrollSpy } from '../hooks/useScrollSpy';
 import { useSeo } from '../hooks/useSeo';
+import { useAnalytics } from '../hooks/useAnalytics';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import SectionRenderer from '../components/sections/SectionRenderer';
 import AskMeWidget from '../components/ask-me/AskMeWidget';
@@ -11,6 +12,7 @@ import { LoadingSpinner, ErrorState } from '../design-system';
 
 export default function HomePage() {
   const dispatch = useAppDispatch();
+  useAnalytics();
   const { data: profile, loading: profileLoading, error: profileError } = useAppSelector(
     (state) => state.profile
   );

@@ -79,6 +79,8 @@ export const api = {
 
   getApprovedReviews: () => client.get('/reviews'),
   submitReview: (data) => client.post('/reviews', data),
+  trackVisit: (data) => client.post('/analytics', data),
+  getVisitorCount: () => client.get('/analytics/count'),
 };
 
 export default api;

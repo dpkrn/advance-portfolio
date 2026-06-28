@@ -87,6 +87,8 @@ export const adminApi = {
   updateReviewStatus: (id, status) => adminClient.patch(`/admin/reviews/${id}/status`, { status }),
   toggleReviewShown: (id) => adminClient.patch(`/admin/reviews/${id}/shown`),
   deleteReview: (id) => adminClient.delete(`/admin/reviews/${id}`),
+
+  getAnalytics: () => adminClient.get('/admin/analytics'),
 };
 
 export default adminApi;

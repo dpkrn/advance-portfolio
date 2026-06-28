@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, User, LogOut, ExternalLink, Shield, MessageSquare, Sparkles,
-  FolderKanban, Route, BookOpen, Network, Trophy, Terminal, Github,
+  FolderKanban, Route, BookOpen, Network, Trophy, Terminal, Github, BarChart2,
 } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/useStore';
 import { logout } from '../../store/slices/adminAuthSlice';
@@ -39,6 +39,7 @@ const NAV_GROUPS = [
     items: [
       { to: '/admin/reviews',      label: 'Reviews',      icon: MessageSquare, badgeKey: 'pendingReviews' },
       { to: '/admin/ask-sessions', label: 'Ask Sessions', icon: Sparkles },
+      { to: '/admin/analytics',    label: 'Analytics',    icon: BarChart2 },
     ],
   },
 ];
