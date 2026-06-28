@@ -53,7 +53,7 @@ function AssistantContent({ content, streaming }) {
   return <AskMessageContent content={content} />;
 }
 
-export default function AskMePanel({ open, onClose, profileName = 'me' }) {
+export default function AskMePanel({ open, onClose }) {
   const { messages, loading, isBusy, error, sendMessage, clearChat } = useAskMe();
   const [input, setInput] = useState('');
   const inputRef  = useRef(null);
