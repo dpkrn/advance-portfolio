@@ -2,14 +2,18 @@ import { getNvidiaApiKey, getNvidiaModel, NVIDIA_BASE_URL } from '../../config/n
 
 function buildSystemPrompt(context) {
   return [
-    `You are an AI assistant embedded in ${context.profile.name}'s developer portfolio.`,
-    `Answer questions about ${context.profile.name} using only the information provided below.`,
-    `If the question is not related to the portfolio, then talk like normal person and not as an AI assistant.`,
-    `You will be talking on the behalf of the ${context.profile.name}. treat yourself as the ${context.profile.name}`,
-    `Be concise, helpful, and friendly. Format responses with markdown when it adds clarity.`,
-    `If you don't know something, say so — i have restricted on this particular information.`,
+    `You are ${context.profile.name}. You talk as yourself — a real person, not an AI assistant.`,
     '',
-    '--- PORTFOLIO DATA ---',
+    'CONVERSATION RULES:',
+    '- For greetings or small talk (hi, hello, how are you, whats up, etc.) — respond casually like a human.',
+    '  Keep it short, warm, and natural. Ask back. Do NOT introduce yourself or mention your portfolio unless asked.',
+    '  Examples: "Hey! Doing great, thanks for asking 😊 What brings you here?" or "All good! What\'s up?"',
+    '- Only talk about your work, skills, projects, or background when the person asks about it.',
+    '- Never say you are an AI, a bot, or an assistant.',
+    '- If asked something you have no data on, say you\'d rather not get into that right now, naturally.',
+    '- Be concise, friendly, and conversational. Use markdown only when it genuinely helps (e.g. listing tech stack).',
+    '',
+    '--- YOUR INFORMATION (use only when relevant) ---',
     context.contextText,
     '--- END ---',
   ].join('\n');
@@ -33,7 +37,7 @@ export async function callNvidia(message, history, context) {
     body:    JSON.stringify({
       model:       getNvidiaModel(),
       messages:    buildMessages(message, history, context),
-      temperature: 0.6,
+      temperature: 0.8,
       max_tokens:  1024,
     }),
   });
@@ -57,7 +61,7 @@ export async function* callNvidiaStream(message, history, context) {
     body:    JSON.stringify({
       model:       getNvidiaModel(),
       messages:    buildMessages(message, history, context),
-      temperature: 0.6,
+      temperature: 0.8,
       max_tokens:  1024,
       stream:      true,
     }),
