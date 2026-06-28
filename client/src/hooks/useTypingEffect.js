@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export function useTypingEffect(fullText, isStreaming, speed = 10) {
+export function useTypingEffect(fullText, isStreaming, speed = 18) {
   const [displayed, setDisplayed] = useState('');
   const fullTextRef = useRef(fullText);
   const posRef      = useRef(0);
@@ -15,8 +15,8 @@ export function useTypingEffect(fullText, isStreaming, speed = 10) {
     if (!isStreaming) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-      setDisplayed(fullText);
-      posRef.current = fullText.length;
+      posRef.current = 0;
+      setDisplayed('');
       return;
     }
 
@@ -25,7 +25,9 @@ export function useTypingEffect(fullText, isStreaming, speed = 10) {
     intervalRef.current = setInterval(() => {
       const target = fullTextRef.current;
       if (posRef.current < target.length) {
-        posRef.current++;
+        // Drain faster when backlog is large so it never lags behind
+        const step = target.length - posRef.current > 20 ? 3 : 1;
+        posRef.current = Math.min(posRef.current + step, target.length);
         setDisplayed(target.slice(0, posRef.current));
       }
     }, speed);
@@ -35,6 +37,13 @@ export function useTypingEffect(fullText, isStreaming, speed = 10) {
       intervalRef.current = null;
     };
   }, [isStreaming]);
+
+  // Snap to full text when streaming ends
+  useEffect(() => {
+    if (!isStreaming && fullText) {
+      setDisplayed(fullText);
+    }
+  }, [isStreaming, fullText]);
 
   return displayed;
 }
