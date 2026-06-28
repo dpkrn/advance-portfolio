@@ -19,6 +19,7 @@ import codingProfilesRoutes from './routes/coding-profiles/routes.js';
 import githubRoutes         from './routes/github/routes.js';
 import reviewRoutes         from './routes/review/routes.js';
 import adminRoutes          from './routes/admin/routes.js';
+import analyticsRoutes      from './routes/analytics/routes.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api/coding-profiles', codingProfilesRoutes);
 app.use('/api/github',          githubRoutes);
 app.use('/api/reviews',         reviewRoutes);
 app.use('/api/admin',           adminRoutes);
+app.use('/api/analytics',       analyticsRoutes);
 
 if (isProduction) {
   const clientDist = path.join(__dirname, '../../client/dist');

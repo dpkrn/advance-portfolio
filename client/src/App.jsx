@@ -16,6 +16,7 @@ import AdminSystemDesignPage from './pages/admin/AdminSystemDesignPage';
 import AdminAchievementsPage from './pages/admin/AdminAchievementsPage';
 import AdminCodingProfilesPage from './pages/admin/AdminCodingProfilesPage';
 import AdminGithubPage from './pages/admin/AdminGithubPage';
+import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 function AppShell() {
@@ -47,6 +48,7 @@ function AppShell() {
         <Route path="github" element={<AdminGithubPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="ask-sessions" element={<AdminAskSessionsPage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
       </Route>
 
       <Route path="/admin/*" element={<Navigate to="/admin" replace />} />

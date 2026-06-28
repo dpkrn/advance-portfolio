@@ -7,3 +7,6 @@ build/
 .DS_Store
 coverage/
 .vite/
+
+# Local AI skills file — contains admin credentials, do not commit
+SKILLS.md
