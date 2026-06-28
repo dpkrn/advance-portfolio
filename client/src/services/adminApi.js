@@ -18,7 +18,6 @@ adminClient.interceptors.response.use(
 
 export const adminApi = {
   login: (password) => adminClient.post('/admin/login', { password }),
-  me: () => adminClient.get('/admin/me'),
 
   getProfile: () => adminClient.get('/admin/profile'),
   updateProfile: (data) => adminClient.put('/admin/profile', data),
@@ -28,7 +27,6 @@ export const adminApi = {
   createSection: (data) => adminClient.post('/admin/sections', data),
   updateSection: (slug, data) => adminClient.put(`/admin/sections/${slug}`, data),
   deleteSection: (slug) => adminClient.delete(`/admin/sections/${slug}`),
-  reorderSections: (order) => adminClient.put('/admin/sections/reorder', { order }),
   moveSection: (slug, direction) => adminClient.post('/admin/sections/move', { slug, direction }),
   toggleVisibility: (slug) => adminClient.patch(`/admin/sections/${slug}/visibility`),
 
@@ -36,12 +34,10 @@ export const adminApi = {
     adminClient.get(`/admin/ask/sessions?page=${page}&limit=${limit}`),
 
   getProjects: () => adminClient.get('/admin/projects'),
-  getProject: (slug) => adminClient.get(`/admin/projects/${slug}`),
   createProject: (data) => adminClient.post('/admin/projects', data),
   updateProject: (slug, data) => adminClient.put(`/admin/projects/${slug}`, data),
   deleteProject: (slug) => adminClient.delete(`/admin/projects/${slug}`),
   reorderProjects: (order) => adminClient.put('/admin/projects/reorder', { order }),
-  toggleProjectVisibility: (slug) => adminClient.patch(`/admin/projects/${slug}/visibility`),
 
   getMilestones: () => adminClient.get('/admin/timeline'),
   createMilestone: (data) => adminClient.post('/admin/timeline', data),
@@ -50,15 +46,12 @@ export const adminApi = {
   reorderMilestones: (order) => adminClient.put('/admin/timeline/reorder', { order }),
 
   getNotebookEntries: () => adminClient.get('/admin/notebook'),
-  getNotebookEntry: (slug) => adminClient.get(`/admin/notebook/${slug}`),
   createNotebookEntry: (data) => adminClient.post('/admin/notebook', data),
   updateNotebookEntry: (slug, data) => adminClient.put(`/admin/notebook/${slug}`, data),
   deleteNotebookEntry: (slug) => adminClient.delete(`/admin/notebook/${slug}`),
   reorderNotebookEntries: (order) => adminClient.put('/admin/notebook/reorder', { order }),
-  toggleNotebookEntryVisibility: (slug) => adminClient.patch(`/admin/notebook/${slug}/visibility`),
 
   getSystemDesignCases: () => adminClient.get('/admin/system-design'),
-  getSystemDesignCase: (slug) => adminClient.get(`/admin/system-design/${slug}`),
   createSystemDesignCase: (data) => adminClient.post('/admin/system-design', data),
   updateSystemDesignCase: (slug, data) => adminClient.put(`/admin/system-design/${slug}`, data),
   deleteSystemDesignCase: (slug) => adminClient.delete(`/admin/system-design/${slug}`),

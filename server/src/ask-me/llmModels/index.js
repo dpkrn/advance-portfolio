@@ -18,5 +18,3 @@ export function getStreamProvider() {
   const key = getLlmProvider();
   return key ? (STREAM_PROVIDERS[key] ?? null) : null;
 }
-
-export { callNvidia, callNvidiaStream };

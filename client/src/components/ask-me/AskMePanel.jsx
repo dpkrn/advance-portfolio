@@ -20,7 +20,7 @@ function StreamingCursor() {
 function AssistantContent({ content, streaming }) {
   if (streaming) {
     return (
-      <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
+      <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90 break-words min-w-0">
         {content}
         <StreamingCursor />
       </p>
@@ -143,7 +143,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                       : <Bot  className="w-3.5 h-3.5 text-accent-light" />}
                   </div>
                   <div
-                    className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+                    className={`max-w-[85%] min-w-0 px-4 py-3 rounded-2xl text-sm leading-relaxed overflow-hidden ${
                       msg.role === 'user'
                         ? 'bg-accent text-white rounded-tr-md'
                         : 'glass-panel rounded-tl-md'

@@ -20,9 +20,7 @@ export const api = {
   getProject: (slug) => client.get(`/projects/${slug}`),
   getMilestones: () => client.get('/timeline'),
   submitContact: (data) => client.post('/contact', data),
-  askQuestion: (message, sessionId) => client.post('/ask', { message, sessionId }),
-
-  // Streaming variant — reads SSE, calls onChunk per token, onDone when complete
+  // Streaming AI — reads SSE, calls onChunk per token, onDone when complete
   askQuestionStream: async (message, sessionId, { onChunk, onDone, onError } = {}) => {
     const response = await fetch(`${BASE}/ask/stream`, {
       method: 'POST',
