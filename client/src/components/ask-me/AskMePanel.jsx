@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Trash2, Bot, User } from 'lucide-react';
 import { useAskMe } from '../../hooks/useAskMe';
+import { useTypingEffect } from '../../hooks/useTypingEffect';
 import { SUGGESTED_QUESTIONS, WELCOME_MESSAGE } from './constants';
 import AskMessageContent from './AskMessageContent';
 
@@ -15,13 +16,14 @@ function StreamingCursor() {
   );
 }
 
-// While streaming, render raw pre-wrap text to avoid broken partial-markdown.
-// Once done, switch to the full markdown renderer.
+// Smoothly types out streamed content char-by-char; snaps to full text when done.
 function AssistantContent({ content, streaming }) {
+  const displayed = useTypingEffect(content, streaming);
+
   if (streaming) {
     return (
       <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90 break-words min-w-0">
-        {content}
+        {displayed}
         <StreamingCursor />
       </p>
     );
@@ -163,11 +165,11 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                     <Bot className="w-3.5 h-3.5 text-accent-light" />
                   </div>
                   <div className="glass-panel px-4 py-3 flex items-center gap-1.5">
-                    {[0, 160, 320].map((delay) => (
+                    {[0, 150, 300].map((delay) => (
                       <span
                         key={delay}
-                        className="w-1.5 h-1.5 rounded-full bg-accent-light/60 animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
+                        className="w-2 h-2 rounded-full bg-accent-light/70 animate-bounce"
+                        style={{ animationDelay: `${delay}ms`, animationDuration: '900ms' }}
                       />
                     ))}
                   </div>
