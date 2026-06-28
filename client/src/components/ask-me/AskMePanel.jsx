@@ -146,7 +146,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </div>
                 <div className="glass-panel px-4 py-3 flex-1 min-w-0">
                   <p className="text-sm text-foreground leading-relaxed">
-                    {WELCOME_MESSAGE(profileName)}
+                    {WELCOME_MESSAGE()}
                   </p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">
-                Powered by AI · Answers based on portfolio data
+                {/* Powered by AI · Answers based on portfolio data */}
               </p>
             </form>
           </motion.aside>
