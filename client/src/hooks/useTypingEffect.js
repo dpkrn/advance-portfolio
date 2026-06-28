@@ -13,19 +13,23 @@ export function useTypingEffect(fullText, isStreaming, speed = 18) {
 
   useEffect(() => {
     if (!isStreaming) {
+      // Streaming ended — stop and snap to complete text
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-      posRef.current = 0;
-      setDisplayed('');
+      setDisplayed(fullText);
+      posRef.current = fullText.length;
       return;
     }
 
+    // Streaming started — reset and begin typing from zero
     if (intervalRef.current) return;
+    posRef.current = 0;
+    setDisplayed('');
 
     intervalRef.current = setInterval(() => {
       const target = fullTextRef.current;
       if (posRef.current < target.length) {
-        // Drain faster when backlog is large so it never lags behind
+        // Drain faster when there's a large backlog so it never falls behind
         const step = target.length - posRef.current > 20 ? 3 : 1;
         posRef.current = Math.min(posRef.current + step, target.length);
         setDisplayed(target.slice(0, posRef.current));
@@ -36,14 +40,7 @@ export function useTypingEffect(fullText, isStreaming, speed = 18) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     };
-  }, [isStreaming]);
-
-  // Snap to full text when streaming ends
-  useEffect(() => {
-    if (!isStreaming && fullText) {
-      setDisplayed(fullText);
-    }
-  }, [isStreaming, fullText]);
+  }, [isStreaming]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return displayed;
 }
