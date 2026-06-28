@@ -3,8 +3,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 import profileRoutes        from './routes/profile/routes.js';
 import sectionRoutes        from './routes/section/routes.js';
@@ -23,12 +21,9 @@ import analyticsRoutes      from './routes/analytics/routes.js';
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isProduction = process.env.NODE_ENV === 'production';
-
 const app = express();
 
-app.use(helmet({ contentSecurityPolicy: isProduction ? undefined : false }));
+app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(morgan('dev'));
 app.use(express.json());
@@ -51,15 +46,6 @@ app.use('/api/github',          githubRoutes);
 app.use('/api/reviews',         reviewRoutes);
 app.use('/api/admin',           adminRoutes);
 app.use('/api/analytics',       analyticsRoutes);
-
-if (isProduction) {
-  const clientDist = path.join(__dirname, '../../client/dist');
-  app.use(express.static(clientDist));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
-}
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Not found' });
