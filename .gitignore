@@ -14,4 +14,3 @@ linkedinpost.md
 .vercel
 .env*
 !client/.env
-!client/.env.production
