@@ -159,14 +159,17 @@ export async function adminMoveSection(req, res, next) {
 
 export async function adminToggleSectionVisibility(req, res, next) {
   try {
-    const section = await Section.findOne({ slug: req.params.slug });
-    if (!section) {
+    const current = await Section.findOne({ slug: req.params.slug }).select('visible');
+    if (!current) {
       return res.status(404).json({ message: 'Section not found' });
     }
 
-    section.visible = !section.visible;
-    await section.save();
-    res.json(section);
+    const updated = await Section.findOneAndUpdate(
+      { slug: req.params.slug },
+      { $set: { visible: !current.visible } },
+      { new: true }
+    );
+    res.json(updated);
   } catch (error) {
     next(error);
   }

@@ -229,7 +229,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">
-                 think like its a Deepak talking to you
+                Powered by AI · Answers based on portfolio data
               </p>
             </form>
           </motion.aside>

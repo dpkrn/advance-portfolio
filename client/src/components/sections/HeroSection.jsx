@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Download, ArrowRight, Github, Linkedin, Twitter, Mail,
-  Briefcase, Rocket, GitBranch, Code, Sparkles, MapPin,
+  Briefcase, Rocket, GitBranch, Code, Sparkles, MapPin, Users,
 } from 'lucide-react';
 import { Button, Tag, StatCard, staggerContainer } from '../../design-system';
 import { useAppDispatch } from '../../hooks/useStore';
 import { openAskPanel } from '../../store/slices/uiSlice';
+import { api } from '../../services/api';
 
 const statIcons = {
   briefcase: Briefcase,
@@ -30,6 +32,12 @@ const fadeUp = (delay = 0) => ({
 
 export default function HeroSection({ section, profile, id }) {
   const dispatch = useAppDispatch();
+  const [visitorCount, setVisitorCount] = useState(null);
+
+  useEffect(() => {
+    api.getVisitorCount().then(({ total }) => setVisitorCount(total)).catch(() => {});
+  }, []);
+
   if (!profile) return null;
 
   const { content } = section;
@@ -165,6 +173,14 @@ export default function HeroSection({ section, profile, id }) {
                   </a>
                 );
               })}
+            </motion.div>
+          )}
+
+          {/* Visitor counter */}
+          {visitorCount !== null && (
+            <motion.div {...fadeUp(0.37)} className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6">
+              <Users className="w-3.5 h-3.5" />
+              <span>{visitorCount.toLocaleString()}+ visitors</span>
             </motion.div>
           )}
 

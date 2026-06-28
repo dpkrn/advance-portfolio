@@ -74,12 +74,15 @@ import {
   adminUpdateGithubConfig,
   adminSyncGithubData,
 } from '../../controllers/github/admin.js';
+import { getAnalytics } from '../../controllers/analytics/admin.js';
 
 const router = Router();
 
 router.post('/login', adminLogin);
 
 router.use(requireAdmin);
+
+router.get('/analytics', getAnalytics);
 
 router.post('/upload', uploadMiddleware.single('file'), uploadImage);
 router.delete('/upload', deleteImage);
