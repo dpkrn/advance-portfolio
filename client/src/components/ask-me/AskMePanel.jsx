@@ -2,8 +2,30 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Trash2, Bot, User } from 'lucide-react';
 import { useAskMe } from '../../hooks/useAskMe';
+import { useTypingEffect } from '../../hooks/useTypingEffect';
 import { SUGGESTED_QUESTIONS, WELCOME_MESSAGE } from './constants';
 import AskMessageContent from './AskMessageContent';
+
+// Wave dots shown while waiting for the first token
+function WaveDots() {
+  return (
+    <div className="flex items-center gap-1.5 py-0.5">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="w-2 h-2 rounded-full bg-accent-light block"
+          animate={{ y: [0, -7, 0] }}
+          transition={{
+            duration: 0.7,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: i * 0.15,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // Blinking caret shown at the end of a streaming response
 function StreamingCursor() {
@@ -15,21 +37,23 @@ function StreamingCursor() {
   );
 }
 
-// While streaming, render raw pre-wrap text to avoid broken partial-markdown.
-// Once done, switch to the full markdown renderer.
+// Smoothly types out streamed content char-by-char; snaps to full text when done.
 function AssistantContent({ content, streaming }) {
+  const displayed = useTypingEffect(content, streaming);
+  const text = streaming ? displayed : content;
+
   if (streaming) {
     return (
       <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground/90 break-words min-w-0">
-        {content}
-        <StreamingCursor />
+        {text || <WaveDots />}
+        {text && <StreamingCursor />}
       </p>
     );
   }
   return <AskMessageContent content={content} />;
 }
 
-export default function AskMePanel({ open, onClose, profileName = 'me' }) {
+export default function AskMePanel({ open, onClose }) {
   const { messages, loading, isBusy, error, sendMessage, clearChat } = useAskMe();
   const [input, setInput] = useState('');
   const inputRef  = useRef(null);
@@ -122,7 +146,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </div>
                 <div className="glass-panel px-4 py-3 flex-1 min-w-0">
                   <p className="text-sm text-foreground leading-relaxed">
-                    {WELCOME_MESSAGE(profileName)}
+                    {WELCOME_MESSAGE()}
                   </p>
                 </div>
               </div>
@@ -162,14 +186,8 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                   <div className="w-7 h-7 rounded-lg icon-box flex items-center justify-center shrink-0">
                     <Bot className="w-3.5 h-3.5 text-accent-light" />
                   </div>
-                  <div className="glass-panel px-4 py-3 flex items-center gap-1.5">
-                    {[0, 160, 320].map((delay) => (
-                      <span
-                        key={delay}
-                        className="w-1.5 h-1.5 rounded-full bg-accent-light/60 animate-bounce"
-                        style={{ animationDelay: `${delay}ms` }}
-                      />
-                    ))}
+                  <div className="glass-panel px-4 py-3">
+                    <WaveDots />
                   </div>
                 </div>
               )}
@@ -229,7 +247,7 @@ export default function AskMePanel({ open, onClose, profileName = 'me' }) {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">
-                Powered by AI · Answers based on portfolio data
+                {/* Powered by AI · Answers based on portfolio data */}
               </p>
             </form>
           </motion.aside>

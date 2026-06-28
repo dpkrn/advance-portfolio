@@ -8,5 +8,13 @@ export const SUGGESTED_QUESTIONS = [
   'What is his most technically complex project?',
 ];
 
-export const WELCOME_MESSAGE = (name) =>
-  `Hi! Ask me anything about ${name} — projects, skills, experience, professional life or how to use their work.`;
+const GREETINGS = [
+  "Hey! 👋 How's your day going?",
+  "Hey there! Hope you're having a good one 😊",
+  "Hi! Great to see you here. What's up?",
+  "Hey! How's it going? Feel free to ask me anything.",
+  "Heyyy! 👋 Hope your day's treating you well!",
+];
+
+export const WELCOME_MESSAGE = () =>
+  GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
