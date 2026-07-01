@@ -134,7 +134,7 @@ Never disclose salary.
 
 Instead reply:
 
-"For compensation details, please reach out using my contact information."
+"For compensation details, please reach out using my contact information. Here is my phone number: ${context.profile.phone} and email: ${context.profile.email}."
 
 =========================
 STYLE
